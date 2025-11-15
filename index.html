@@ -23,6 +23,24 @@
       body {
         font-family: 'Inter', 'Tajawal', sans-serif;
       }
+      @keyframes loading-bar {
+        0% {
+          left: -100%;
+          width: 30%;
+        }
+        50% {
+          left: 100%;
+          width: 80%;
+        }
+        100% {
+          left: -100%;
+          width: 30%;
+        }
+      }
+
+      .animate-loading-bar {
+        animation: loading-bar 2s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+      }
     </style>
   <script type="importmap">
 {
