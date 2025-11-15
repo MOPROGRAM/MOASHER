@@ -10,4 +10,8 @@ export interface StockOpportunity {
   entryPoints: number[];
   stopLoss: number;
   targetPrice: number;
+  debtToAssetsRatio: number;
+  interestIncomeRatio: number;
+  financialsDate: string;
+  priceDataDate: string;
 }
