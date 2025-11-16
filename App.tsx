@@ -121,6 +121,20 @@ const App: React.FC = () => {
     setFilteredStocks(stocksToProcess);
   }, [allStocks, showOnlyActionableOpportunities]); // selectedPriceRange removed from dependencies here
 
+  // Effect to re-fetch data when language changes
+  useEffect(() => {
+    if (!isLoading && !isSingleStockLoading && (allStocks.length > 0 || singleStockResult)) {
+        // If there's currently a single stock analysis result, re-analyze it
+        if (singleStockResult && tickerInput.trim()) {
+            handleAnalyzeSingleStock();
+        } 
+        // Otherwise, if there are general stock opportunities, re-fetch them
+        else if (allStocks.length > 0) {
+            handleFetchStocks();
+        }
+    }
+  }, [language, handleFetchStocks, handleAnalyzeSingleStock, allStocks.length, singleStockResult, tickerInput, isLoading, isSingleStockLoading]);
+
 
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8">
