@@ -29,9 +29,7 @@ const LoadingSpinner: React.FC = () => {
       </svg>
       <span className="text-lg text-gray-600 dark:text-gray-300 mt-4">{t('analyzingMarket')}</span>
       {/* Indeterminate Progress Bar */}
-      <div className="w-full max-w-xs h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-4 overflow-hidden relative">
-        <div className="absolute top-0 h-full bg-cyan-500 dark:bg-cyan-400 rounded-full animate-loading-bar"></div>
-      </div>
+      {/* Removed as per user request */}
     </div>
   );
 };
