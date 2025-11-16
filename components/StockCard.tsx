@@ -11,7 +11,7 @@ interface StockCardProps {
 
 const StockCard: React.FC<StockCardProps> = ({ stock, isListContext = false, style, initialShowChart = false }) => {
   const [showChart, setShowChart] = useState(initialShowChart);
-  const [chartInterval, setChartInterval] = useState<'1h' | '2h' | '4h' | 'D'>('4h'); // Default to 4 hours
+  // Removed chartInterval state as it's no longer controlled by custom buttons
   const { t, language, isRTL } = useLanguage();
 
   // Ensure entryPoints is an array before checking its length and values
@@ -57,42 +57,9 @@ const StockCard: React.FC<StockCardProps> = ({ stock, isListContext = false, sty
       `}>
           {showChart && (
             <>
-              <div className="flex justify-center gap-2 p-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600">
-                <button
-                  onClick={() => setChartInterval('1h')}
-                  className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors duration-200 ${
-                    chartInterval === '1h' ? 'bg-cyan-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {t('chartInterval1h')}
-                </button>
-                <button
-                  onClick={() => setChartInterval('2h')}
-                  className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors duration-200 ${
-                    chartInterval === '2h' ? 'bg-cyan-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {t('chartInterval2h')}
-                </button>
-                <button
-                  onClick={() => setChartInterval('4h')}
-                  className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors duration-200 ${
-                    chartInterval === '4h' ? 'bg-cyan-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {t('chartInterval4h')}
-                </button>
-                <button
-                  onClick={() => setChartInterval('D')}
-                  className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors duration-200 ${
-                    chartInterval === 'D' ? 'bg-cyan-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {t('chartIntervalD')}
-                </button>
-              </div>
+              {/* Removed custom interval buttons. User will use native TradingView controls. */}
               <iframe
-                src={`https://s.tradingview.com/widgetembed/?symbol=${stock.ticker}&interval=${chartInterval}&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=${document.documentElement.classList.contains('dark') ? 'dark' : 'light'}&style=1&timezone=Etc%2FUTC&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=[]&disabled_features=[]&locale=${isRTL ? 'ar_AE' : 'en'}&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${stock.ticker}`}
+                src={`https://s.tradingview.com/widgetembed/?symbol=${stock.ticker}&interval=240&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=${document.documentElement.classList.contains('dark') ? 'dark' : 'light'}&style=1&timezone=Etc%2FUTC&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=[]&disabled_features=[]&locale=${isRTL ? 'ar_AE' : 'en'}&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${stock.ticker}`}
                 className="w-full h-[280px] border-0"
                 title={`${stock.ticker} Chart`}
                 allowFullScreen
