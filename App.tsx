@@ -36,7 +36,7 @@ const App: React.FC = () => {
   const [tickerInput, setTickerInput] = useState('');
   const [singleStockResult, setSingleStockResult] = useState<StockOpportunity | null>(null);
   const [isSingleStockLoading, setIsSingleStockLoading] = useState(false);
-  const [singleStockError, setSingleStockError] = useState<string | null>(null);
+  const [singleStockError, setErrorSingleStockError] = useState<string | null>(null);
 
   const { t, language } = useLanguage();
 
@@ -79,7 +79,7 @@ const App: React.FC = () => {
   const handleAnalyzeSingleStock = useCallback(async () => {
     if (!tickerInput.trim()) return;
     setIsSingleStockLoading(true);
-    setSingleStockError(null);
+    setErrorSingleStockError(null);
     setSingleStockResult(null);
     setAllStocks([]); // Clear opportunity list
     try {
@@ -87,9 +87,9 @@ const App: React.FC = () => {
       setSingleStockResult(result);
     } catch (err) {
        if (err instanceof Error) {
-        setSingleStockError(err.message);
+        setErrorSingleStockError(err.message);
       } else {
-        setSingleStockError("An unexpected error occurred during analysis.");
+        setErrorSingleStockError("An unexpected error occurred during analysis.");
       }
     } finally {
       setIsSingleStockLoading(false);
@@ -156,7 +156,7 @@ const App: React.FC = () => {
       
         {/* --- Single Stock Analysis Section --- */}
         <div className="mb-12 p-6 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold mb-2 text-center">{t('analyzeSpecificStockTitle')}</h2>
+            <h2 className="text-xl font-bold mb-2 %>%text-center">{t('analyzeSpecificStockTitle')}</h2>
             <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-4">{t('analyzeSpecificStockDescription')}</p>
             <div className="flex flex-col sm:flex-row gap-4">
                 <input
@@ -281,7 +281,7 @@ const App: React.FC = () => {
                     <p className="text-xl">{t('noResults')}</p>
                 </div>
             )}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-2 gap-8">
             {filteredStocks.map((stock, index) => (
                 <StockCard key={`${stock.ticker}-${index}`} stock={stock} isListContext={true} initialShowChart={true} style={{ animationDelay: `${index * 0.1}s` }} />
             ))}
