@@ -34,5 +34,6 @@
   "priceRange20_50": "20 - 50 دولار",
   "priceRange50_100": "50 - 100 دولار",
   "priceRange100_200": "100 - 200 دولار",
-  "priceRange200_plus": "أكثر من 200 دولار"
+  "priceRange200_plus": "أكثر من 200 دولار",
+  "selectPriceRangeForSearch": "اختر نطاق السعر للبحث"
 }

@@ -1,11 +1,13 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { fetchStockOpportunities, fetchSingleStockAnalysis } from './services/geminiService';
+import { fetchStockOpportunities } from './services/geminiService';
 import type { StockOpportunity } from './types';
 import StockCard from './components/StockCard';
 import LoadingSpinner from './components/LoadingSpinner';
 import { useLanguage } from './contexts/LanguageContext';
 import ThemeToggle from './components/ThemeToggle';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import { fetchSingleStockAnalysis, PriceRange } from './services/geminiService';
+
 
 // This is a mock component to allow interpolation in the translation strings.
 // A real library like react-i18next would provide this.
@@ -41,13 +43,17 @@ const App: React.FC = () => {
   const { t, language } = useLanguage();
 
   // Filter state for actionable opportunities
-  const [filtersVisible, setFiltersVisible] = useState<boolean>(true); // Reintroduce filter visibility
-  const [showOnlyActionableOpportunities, setShowOnlyActionableOpportunities] = useState<boolean>(true);
-  const [selectedPriceRange, setSelectedPriceRange] = useState<'all' | '0-5' | '5-10' | '10-20' | '20-50' | '50-100' | '100-200' | '200+'>('all'); // New state for price range filter
+  const [filtersVisible, setFiltersVisible] = useState<boolean>(false); // Filters start hidden now
+  const [showOnlyActionableOpportunities, setShowOnlyActionableOpportunities] = useState<boolean>(true); // Always true and disabled
+
+  // Price range is now a PRE-FETCH parameter
+  const [selectedPriceRange, setSelectedPriceRange] = useState<PriceRange>('all');
 
   const resetFilters = () => {
     setShowOnlyActionableOpportunities(true);
-    setSelectedPriceRange('all'); // Reset price range filter
+    // Note: selectedPriceRange is now a pre-fetch parameter, so resetting it here
+    // would only affect the next fetch, not current filtered results.
+    // For now, it's explicitly reset before fetch.
   };
   
   const handleFetchStocks = useCallback(async () => {
@@ -55,9 +61,10 @@ const App: React.FC = () => {
     setError(null);
     setAllStocks([]);
     setSingleStockResult(null); // Clear single stock result
-    resetFilters();
+    resetFilters(); // Reset client-side filters
     try {
-      const opportunities = await fetchStockOpportunities(language);
+      // Pass selectedPriceRange to the service
+      const opportunities = await fetchStockOpportunities(language, selectedPriceRange);
       setAllStocks(opportunities);
     } catch (err) {
       if (err instanceof Error) {
@@ -68,7 +75,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [language]);
+  }, [language, selectedPriceRange]); // Include selectedPriceRange in dependencies
   
   const handleAnalyzeSingleStock = useCallback(async () => {
     if (!tickerInput.trim()) return;
@@ -101,28 +108,8 @@ const App: React.FC = () => {
         );
     }
 
-    // Apply price range filter
-    if (selectedPriceRange !== 'all') {
-      stocksToProcess = stocksToProcess.filter(stock => {
-        const entryPrice = stock.entryPoints && stock.entryPoints.length > 0 ? stock.entryPoints[0] : Infinity;
-        if (selectedPriceRange === '0-5') {
-          return entryPrice > 0 && entryPrice < 5;
-        } else if (selectedPriceRange === '5-10') {
-          return entryPrice >= 5 && entryPrice < 10;
-        } else if (selectedPriceRange === '10-20') {
-          return entryPrice >= 10 && entryPrice < 20;
-        } else if (selectedPriceRange === '20-50') {
-          return entryPrice >= 20 && entryPrice < 50;
-        } else if (selectedPriceRange === '50-100') {
-          return entryPrice >= 50 && entryPrice < 100;
-        } else if (selectedPriceRange === '100-200') {
-          return entryPrice >= 100 && entryPrice < 200;
-        } else if (selectedPriceRange === '200+') {
-          return entryPrice >= 200;
-        }
-        return true;
-      });
-    }
+    // Client-side price range filter is REMOVED as it's now a pre-fetch parameter
+    // The Gemini API should already return stocks within the selected price range.
 
     // Sort by the lowest entry price first
     stocksToProcess.sort((a, b) => {
@@ -132,7 +119,8 @@ const App: React.FC = () => {
     });
 
     setFilteredStocks(stocksToProcess);
-  }, [allStocks, showOnlyActionableOpportunities, selectedPriceRange]);
+  }, [allStocks, showOnlyActionableOpportunities]); // selectedPriceRange removed from dependencies here
+
 
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8">
@@ -186,6 +174,29 @@ const App: React.FC = () => {
         </div>
         
         <div className="text-center mb-12 text-gray-500 dark:text-gray-400">{t('or')}</div>
+
+        {/* --- Price Range Selection (Pre-fetch) --- */}
+        <div className="mb-8 p-6 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg max-w-xl mx-auto">
+            <h3 className="text-xl font-bold mb-4 text-center">{t('selectPriceRangeForSearch')}</h3>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <select
+                    id="price-range-pre-fetch"
+                    value={selectedPriceRange}
+                    onChange={(e) => setSelectedPriceRange(e.target.value as PriceRange)}
+                    className="flex-grow w-full bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md p-3 focus:ring-cyan-500 focus:border-cyan-500"
+                    aria-label={t('priceRange')}
+                >
+                    <option value="all">{t('allPrices')}</option>
+                    <option value="0-5">{t('priceRange0_5')}</option>
+                    <option value="5-10">{t('priceRange5_10')}</option>
+                    <option value="10-20">{t('priceRange10_20')}</option>
+                    <option value="20-50">{t('priceRange20_50')}</option>
+                    <option value="50-100">{t('priceRange50_100')}</option>
+                    <option value="100-200">{t('priceRange100_200')}</option>
+                    <option value="200+">{t('priceRange200_plus')}</option>
+                </select>
+            </div>
+        </div>
 
         <div className="flex justify-center mb-12">
           <button
@@ -248,27 +259,7 @@ const App: React.FC = () => {
                         />
                         <span>{t('showOnlyActionableOpportunities')}</span>
                     </label>
-                    <div>
-                        <label htmlFor="price-range-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('priceRange')}
-                        </label>
-                        <select
-                            id="price-range-filter"
-                            value={selectedPriceRange}
-                            onChange={(e) => setSelectedPriceRange(e.target.value as typeof selectedPriceRange)}
-                            className="w-full bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md p-2 focus:ring-cyan-500 focus:border-cyan-500"
-                            aria-label={t('priceRange')}
-                        >
-                            <option value="all">{t('allPrices')}</option>
-                            <option value="0-5">{t('priceRange0_5')}</option>
-                            <option value="5-10">{t('priceRange5_10')}</option>
-                            <option value="10-20">{t('priceRange10_20')}</option>
-                            <option value="20-50">{t('priceRange20_50')}</option>
-                            <option value="50-100">{t('priceRange50_100')}</option>
-                            <option value="100-200">{t('priceRange100_200')}</option>
-                            <option value="200+">{t('priceRange200_plus')}</option>
-                        </select>
-                    </div>
+                    {/* Price Range Filter removed from here, now a pre-fetch parameter */}
                 </div>
                 <div className="flex flex-wrap gap-4 justify-center pt-4 border-t border-gray-200 dark:border-gray-700">
                   <button onClick={resetFilters} className="px-4 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 text-white font-semibold rounded-lg transition-colors">

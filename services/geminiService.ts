@@ -12,19 +12,45 @@ if (!API_KEY) {
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 const currentYear = new Date().getFullYear(); // Keep for context in instructions, but not used for data
 
-export const fetchStockOpportunities = async (language: 'ar' | 'en'): Promise<StockOpportunity[]> => {
+export type PriceRange = 'all' | '0-5' | '5-10' | '10-20' | '20-50' | '50-100' | '100-200' | '200+';
+
+const getPriceRangeConstraint = (priceRange: PriceRange, language: 'ar' | 'en') => {
+    if (priceRange === 'all') {
+        return {
+            ar: "",
+            en: ""
+        };
+    }
+
+    const priceMap: { [key in PriceRange]: { ar: string, en: string } } = {
+        '0-5': { ar: "نقطة الدخول تتراوح بين 0 و 5 دولارات.", en: "entry points are strictly between $0 and $5." },
+        '5-10': { ar: "نقطة الدخول تتراوح بين 5 و 10 دولارات.", en: "entry points are strictly between $5 and $10." },
+        '10-20': { ar: "نقطة الدخول تتراوح بين 10 و 20 دولارًا.", en: "entry points are strictly between $10 and $20." },
+        '20-50': { ar: "نقطة الدخول تتراوح بين 20 و 50 دولارًا.", en: "entry points are strictly between $20 and $50." },
+        '50-100': { ar: "نقطة الدخول تتراوح بين 50 و 100 دولار.", en: "entry points are strictly between $50 and $100." },
+        '100-200': { ar: "نقطة الدخول تتراوح بين 100 و 200 دولار.", en: "entry points are strictly between $100 and $200." },
+        '200+': { ar: "نقطة الدخول تزيد عن 200 دولار.", en: "entry points are strictly above $200." },
+        'all': { ar: "", en: "" } // Should not be reached if handled above
+    };
+
+    return priceMap[priceRange];
+};
+
+export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange: PriceRange = 'all'): Promise<StockOpportunity[]> => {
   let rawText: string;
   let data: StockOpportunity[];
   try {
     const today = new Date().toISOString().split('T')[0];
+    const priceConstraint = getPriceRangeConstraint(priceRange, language);
+
     const langInstructions = {
         ar: {
             langName: "Arabic (العربية الفصحى)",
-            prompt: `الرجاء تزويدي بقائمة من 100 سهم أمريكي تمثل فرص شراء قوية عند قاع السوينج لليوم بتاريخ ${today}. يجب أن يقدم كل سهم خطة تداول متكاملة (نقاط دخول، هدف، وقف خسارة) مع التركيز على نقاط الدخول المثالية التي تمثل "نقاط الطعم". ركز فقط على تحديد فرص قاع السوينج الواضحة. إذا لم يكن السهم في قاع سوينج واضح، فلا تضمنه في القائمة.`
+            prompt: `الرجاء تزويدي بقائمة من 100 سهم أمريكي تمثل فرص شراء قوية عند قاع السوينج لليوم بتاريخ ${today}. يجب أن يقدم كل سهم خطة تداول متكاملة (نقاط دخول، هدف، وقف خسارة) مع التركيز على نقاط الدخول المثالية التي تمثل "نقاط الطعم". ركز فقط على تحديد فرص قاع السوينج الواضحة. ${priceConstraint.ar ? `بشرط أن تكون ${priceConstraint.ar}` : ''} إذا لم يكن السهم في قاع سوينج واضح، فلا تضمنه في القائمة.`
         },
         en: {
             langName: "English",
-            prompt: `Please provide me with a list of 100 US stocks that represent strong buying opportunities at a Swing Channel Low for today, ${today}. Each stock must include a complete trading plan (entry points, target, stop loss), specifically emphasizing the *optimal* entry points at these swing lows. Focus strictly on identifying clear Swing Channel Low opportunities. If a stock is not at a clear swing low, do not include it in the list.`
+            prompt: `Please provide me with a list of 100 US stocks that represent strong buying opportunities at a Swing Channel Low for today, ${today}. Each stock must include a complete trading plan (entry points, target, stop loss), specifically emphasizing the *optimal* entry points at these swing lows. Focus strictly on identifying clear Swing Channel Low opportunities. ${priceConstraint.en ? `Ensure that the ${priceConstraint.en}` : ''} If a stock is not at a clear swing low, do not include it in the list.`
         }
     }
 

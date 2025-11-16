@@ -34,5 +34,6 @@
   "priceRange20_50": "$20 - $50",
   "priceRange50_100": "$50 - $100",
   "priceRange100_200": "$100 - $200",
-  "priceRange200_plus": "$200+"
+  "priceRange200_plus": "$200+",
+  "selectPriceRangeForSearch": "Select Price Range for Search"
 }
