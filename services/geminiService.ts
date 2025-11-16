@@ -20,11 +20,11 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en'): Promise<St
     const langInstructions = {
         ar: {
             langName: "Arabic (العربية الفصحى)",
-            prompt: `الرجاء تزويدي بقائمة من 100 سهم أمريكي تمثل فرص شراء قوية عند قاع السوينج لليوم بتاريخ ${today}. يجب أن يقدم كل سهم خطة تداول متكاملة (نقاط دخول، هدف، وقف خسارة). ركز فقط على تحديد فرص قاع السوينج الواضحة. إذا لم يكن السهم في قاع سوينج واضح، فلا تضمنه في القائمة.`
+            prompt: `الرجاء تزويدي بقائمة من 100 سهم أمريكي تمثل فرص شراء قوية عند قاع السوينج لليوم بتاريخ ${today}. يجب أن يقدم كل سهم خطة تداول متكاملة (نقاط دخول، هدف، وقف خسارة) مع التركيز على نقاط الدخول المثالية التي تمثل "نقاط الطعم". ركز فقط على تحديد فرص قاع السوينج الواضحة. إذا لم يكن السهم في قاع سوينج واضح، فلا تضمنه في القائمة.`
         },
         en: {
             langName: "English",
-            prompt: `Please provide me with a list of 100 US stocks that represent strong buying opportunities at a Swing Channel Low for today, ${today}. Each stock must include a complete trading plan (entry points, target, stop loss). Focus strictly on identifying clear Swing Channel Low opportunities. If a stock is not at a clear swing low, do not include it in the list.`
+            prompt: `Please provide me with a list of 100 US stocks that represent strong buying opportunities at a Swing Channel Low for today, ${today}. Each stock must include a complete trading plan (entry points, target, stop loss), specifically emphasizing the *optimal* entry points at these swing lows. Focus strictly on identifying clear Swing Channel Low opportunities. If a stock is not at a clear swing low, do not include it in the list.`
         }
     }
 
@@ -149,11 +149,11 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
         const langInstructions = {
             ar: {
                 langName: "Arabic (العربية الفصحى)",
-                prompt: `الرجاء تحليل السهم الأمريكي برمز '${ticker}' لليوم بتاريخ ${today}. هل يمثل فرصة "قاع سوينج" حسب المعايير الفنية الإلزامية؟ إذا كانت هناك فرصة دخول حالية، قدم خطة تداول كاملة. إذا لم تكن هناك فرصة، وضح ذلك في التحليل وأعد قيم الخطdة (نقاط الدخول، الهدف، الوقف) كأصفار.`
+                prompt: `الرجاء تحليل السهم الأمريكي برمز '${ticker}' لليوم بتاريخ ${today}. هل يمثل فرصة "قاع سوينج" حسب المعايير الفنية الإلزامية؟ إذا كانت هناك فرصة دخول حالية، قدم خطة تداول كاملة مع التركيز على نقاط الدخول المثالية التي تمثل "نقاط الطعم". إذا لم تكن هناك فرصة، وضح ذلك في التحليل وأعد قيم الخطة (نقاط الدخول، الهدف، الوقف) كأصفار.`
             },
             en: {
                 langName: "English",
-                prompt: `Please analyze the US stock with ticker '${ticker}' for today, ${today}. Does it represent a 'Swing Channel Low' opportunity based on the mandatory technical criteria? If a current entry opportunity exists, provide a full trading plan. If no opportunity exists, state that clearly in the analysis and return the trading plan values (entry points, target, stop loss) as zeros.`
+                prompt: `Please analyze the US stock with ticker '${ticker}' for today, ${today}. Does it represent a 'Swing Channel Low' opportunity based on the mandatory technical criteria? If a current entry opportunity exists, provide a full trading plan, specifically emphasizing the *optimal* entry points. If no opportunity exists, state that clearly in the analysis and return the trading plan values (entry points, target, stop loss) as zeros.`
             }
         };
 
