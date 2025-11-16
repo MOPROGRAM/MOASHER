@@ -1,5 +1,5 @@
 {
-  "pageTitle": "مؤشر الفرص",
+  "pageTitle": "مؤشر",
   "pageDescription": "تحليل يومي لفرص \"قاع السوينج\" في سوق الأسهم الأمريكي.",
   "updateButton": "📈 تحديث مؤشر الفرص",
   "searchingButton": "جاري البحث...",
@@ -16,7 +16,7 @@
   "detailedAnalysis": "التحليل المفصل:",
   "showChart": "إظهار شارت TradingView",
   "hideChart": "إخفاء شارت TradingView",
-  "footerText": "تم التطوير بواسطة مهندس React خبير. المحتوى مقدم لأغراض تعليمية فقط وليس نصيحة استثمارية.",
+  "footerText": "المحتوى مقدم لأغراض تعليمية فقط وليس نصيحة استثمارية.",
   "analyzeSpecificStockTitle": "تحليل سهم محدد",
   "analyzeSpecificStockDescription": "أدخل رمز أي سهم أمريكي للحصول على تحليل فوري لفرص الدخول.",
   "tickerPlaceholder": "مثال: AAPL, MSFT, TSLA",
@@ -35,5 +35,7 @@
   "priceRange50_100": "50 - 100 دولار",
   "priceRange100_200": "100 - 200 دولار",
   "priceRange200_plus": "أكثر من 200 دولار",
-  "selectPriceRangeForSearch": "اختر نطاق السعر للبحث"
+  "selectPriceRangeForSearch": "اختر نطاق السعر للبحث",
+  "shariaDisclaimer": "ملاحظة هامة: يجب على المستخدمين التحقق من توافق أي سهم مع الشريعة الإسلامية باستخدام المواقع والطرق المتخصصة قبل التداول. يقدم هذا التطبيق التحليل الفني فقط وليس مسؤولاً عن القرارات المالية.",
+  "toggleTheme": "تبديل المظهر"
 }

@@ -1,6 +1,7 @@
 export interface StockOpportunity {
   companyName: string;
   ticker: string;
+  exchange: string | null; // Added to help TradingView resolve symbols
   price: number | null; // Will not be provided by Gemini
   sector: string | null; // Will not be provided by Gemini
   volume: number | null; // Will not be provided by Gemini

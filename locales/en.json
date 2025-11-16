@@ -1,5 +1,5 @@
 {
-  "pageTitle": "Opportunity Index",
+  "pageTitle": "Moasher",
   "pageDescription": "Daily analysis of 'Swing Low' opportunities in the US stock market.",
   "updateButton": "📈 Update Opportunity Index",
   "searchingButton": "Searching...",
@@ -16,7 +16,7 @@
   "detailedAnalysis": "Detailed Analysis:",
   "showChart": "Show TradingView Chart",
   "hideChart": "Hide TradingView Chart",
-  "footerText": "Developed by an expert React engineer. Content is for educational purposes only and is not investment advice.",
+  "footerText": "Content is for educational purposes only and is not investment advice.",
   "analyzeSpecificStockTitle": "Analyze a Specific Stock",
   "analyzeSpecificStockDescription": "Enter any US stock ticker for an instant analysis of its entry opportunities.",
   "tickerPlaceholder": "e.g., AAPL, MSFT, TSLA",
@@ -35,5 +35,7 @@
   "priceRange50_100": "$50 - $100",
   "priceRange100_200": "$100 - $200",
   "priceRange200_plus": "$200+",
-  "selectPriceRangeForSearch": "Select Price Range for Search"
+  "selectPriceRangeForSearch": "Select Price Range for Search",
+  "shariaDisclaimer": "Important Notice: Users MUST verify the Sharia compliance of any stock using specialized websites and methods before trading. This application provides technical analysis only and is not responsible for financial decisions.",
+  "toggleTheme": "Toggle theme"
 }

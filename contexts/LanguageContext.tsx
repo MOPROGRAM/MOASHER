@@ -49,6 +49,10 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         localStorage.setItem('language', language);
         document.documentElement.lang = language;
         document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+        // Update document title
+        if (translations[language] && translations[language].pageTitle) {
+          document.title = translations[language].pageTitle;
+        }
     });
   }, [language]);
 

@@ -17,6 +17,9 @@ const StockCard: React.FC<StockCardProps> = ({ stock, isListContext = false, sty
   // Ensure entryPoints is an array before checking its length and values
   const hasOpportunity = Array.isArray(stock.entryPoints) && stock.entryPoints.length > 0 && stock.entryPoints[0] > 0;
 
+  // Construct the TradingView symbol using exchange if available
+  const tradingViewSymbol = stock.exchange ? `${stock.exchange}:${stock.ticker}` : stock.ticker;
+
   return (
     <div 
       className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-2xl shadow-md p-6 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col animate-fadeInUp"
@@ -59,7 +62,7 @@ const StockCard: React.FC<StockCardProps> = ({ stock, isListContext = false, sty
             <>
               {/* Removed custom interval buttons. User will use native TradingView controls. */}
               <iframe
-                src={`https://s.tradingview.com/widgetembed/?symbol=${stock.ticker}&interval=240&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=${document.documentElement.classList.contains('dark') ? 'dark' : 'light'}&style=1&timezone=Etc%2FUTC&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=[]&disabled_features=[]&locale=${isRTL ? 'ar_AE' : 'en'}&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${stock.ticker}`}
+                src={`https://s.tradingview.com/widgetembed/?symbol=${tradingViewSymbol}&interval=240&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=${document.documentElement.classList.contains('dark') ? 'dark' : 'light'}&style=1&timezone=Etc%2FUTC&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=[]&disabled_features=[]&locale=${isRTL ? 'ar_AE' : 'en'}&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${tradingViewSymbol}`}
                 className="w-full h-[280px] border-0"
                 title={`${stock.ticker} Chart`}
                 allowFullScreen

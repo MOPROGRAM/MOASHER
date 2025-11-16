@@ -86,7 +86,7 @@ CURRENT_DATE_FOR_ANALYSIS: ${today}
 - **NO OPPORTUNITY HANDLING:** If a stock does NOT present a clear 'Swing Channel Low' opportunity based on your strict criteria, it MUST NOT be included in the list.
 
 **CRITICAL OUTPUT FORMATTING:**
-Your ENTIRE response MUST be a single, valid JSON array string. Do NOT include any introductory text, markdown formatting (like \`\`\`json), or explanations outside of the JSON array itself. The JSON must be an array of objects, where each object has the following keys: "companyName", "ticker", "reason", "analysis", "entryPoints", "targetPrice", "stopLoss".  All other fields are explicitly excluded.
+Your ENTIRE response MUST be a single, valid JSON array string. Do NOT include any introductory text, markdown formatting (like \`\`\`json), or explanations outside of the JSON array itself. The JSON must be an array of objects, where each object has the following keys: "companyName", "ticker", "exchange", "reason", "analysis", "entryPoints", "targetPrice", "stopLoss".  All other fields are explicitly excluded.
 
 All your responses, analysis, and company data must be in the requested language: **${langInstructions[language].langName}**. The data analysis must be current for today, ${today}.
 
@@ -110,6 +110,7 @@ All your responses, analysis, and company data must be in the requested language
             properties: {
               companyName: { type: Type.STRING, description: 'The name of the company.' },
               ticker: { type: Type.STRING, description: 'The stock ticker symbol.' },
+              exchange: { type: Type.STRING, description: 'The exchange where the stock is primarily traded (e.g., NASDAQ, NYSE).' }, // Added exchange
               reason: { type: Type.STRING, description: 'The technical reason for the opportunity.' },
               analysis: { type: Type.STRING, description: 'Detailed technical analysis.' },
               entryPoints: {
@@ -120,7 +121,7 @@ All your responses, analysis, and company data must be in the requested language
               stopLoss: { type: Type.NUMBER, description: 'Suggested stop-loss price.' },
               targetPrice: { type: Type.NUMBER, description: 'Suggested target price.' }
             },
-            required: ["companyName", "ticker", "reason", "analysis", "entryPoints", "stopLoss", "targetPrice"],
+            required: ["companyName", "ticker", "exchange", "reason", "analysis", "entryPoints", "stopLoss", "targetPrice"],
           },
         },
       },
@@ -142,6 +143,7 @@ All your responses, analysis, and company data must be in the requested language
     // And ensure numerical fields are parsed as numbers
     const augmentedData = data.map(stock => ({
         ...stock,
+        exchange: stock.exchange || null, // Ensure exchange is set
         price: null,
         sector: null,
         volume: null,
@@ -209,7 +211,7 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
         - **PURELY ANALYTICAL OUTPUT:** Your output is purely analytical and textual. Your internal model knowledge and analysis are the sole source for identifying opportunities and crafting the trading plan.
 
         **CRITICAL OUTPUT FORMATTING:**
-        Your ENTIRE response MUST be a single, valid JSON object string. Do NOT include any introductory text, markdown formatting (like \`\`\`json), or explanations outside of the JSON object itself. The JSON object must have the following keys: "companyName", "ticker", "reason", "analysis", "entryPoints", "targetPrice", "stopLoss".  All other fields are explicitly excluded.
+        Your ENTIRE response MUST be a single, valid JSON object string. Do NOT include any introductory text, markdown formatting (like \`\`\`json), or explanations outside of the JSON object itself. The JSON object must have the following keys: "companyName", "ticker", "exchange", "reason", "analysis", "entryPoints", "targetPrice", "stopLoss".  All other fields are explicitly excluded.
 
         **RESPONSE LOGIC:**
         - **If the stock MEETS ALL technical criteria for a 'Swing Channel Low' opportunity**:
@@ -241,6 +243,7 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
                   properties: {
                     companyName: { type: Type.STRING, description: 'The name of the company.' },
                     ticker: { type: Type.STRING, description: 'The stock ticker symbol.' },
+                    exchange: { type: Type.STRING, description: 'The exchange where the stock is primarily traded (e.g., NASDAQ, NYSE).' }, // Added exchange
                     reason: { type: Type.STRING, description: 'The technical reason for the opportunity or lack thereof.' },
                     analysis: { type: Type.STRING, description: 'Detailed technical analysis.' },
                     entryPoints: {
@@ -251,7 +254,7 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
                     stopLoss: { type: Type.NUMBER, description: 'Suggested stop-loss price, or 0 if no opportunity.' },
                     targetPrice: { type: Type.NUMBER, description: 'Suggested target price, or 0 if no opportunity.' }
                   },
-                  required: ["companyName", "ticker", "reason", "analysis", "entryPoints", "stopLoss", "targetPrice"],
+                  required: ["companyName", "ticker", "exchange", "reason", "analysis", "entryPoints", "stopLoss", "targetPrice"],
                 },
             },
         });
@@ -272,6 +275,7 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
         // And ensure numerical fields are parsed as numbers
         const augmentedData: StockOpportunity = {
             ...data,
+            exchange: data.exchange || null, // Ensure exchange is set
             price: null,
             sector: null,
             volume: null,
