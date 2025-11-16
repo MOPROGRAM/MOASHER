@@ -11,6 +11,7 @@ interface StockCardProps {
 
 const StockCard: React.FC<StockCardProps> = ({ stock, isListContext = false, style, initialShowChart = false }) => {
   const [showChart, setShowChart] = useState(initialShowChart);
+  const [chartInterval, setChartInterval] = useState<'1h' | '2h' | '4h' | 'D'>('4h'); // Default to 4 hours
   const { t, language, isRTL } = useLanguage();
 
   // Ensure entryPoints is an array before checking its length and values
@@ -37,47 +38,6 @@ const StockCard: React.FC<StockCardProps> = ({ stock, isListContext = false, sty
           <p className="text-gray-600 dark:text-gray-400 font-medium p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20">{stock.reason}</p>
       </div>
 
-      {/* Proposed Trading Plan section removed as per user request */}
-      {/* {hasOpportunity && (
-        <div className="mb-4 p-4 bg-gray-50 dark:bg-slate-700/30 rounded-lg border border-gray-200 dark:border-slate-700 space-y-3">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">{t('tradingPlan')}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
-                <div className="p-2 rounded-md bg-green-500/10">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 inline-block ltr:mr-1 rtl:ml-1 text-green-600 dark:text-green-300">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
-                      </svg>
-                      {t('buySignal')}
-                    </div>
-                    <div className="flex flex-wrap justify-center items-baseline gap-x-2">
-                        {stock.entryPoints.map((point, index) => (
-                            <span key={index} className="text-green-600 dark:text-green-300 font-mono text-lg font-bold">${point.toFixed(2)}</span>
-                        ))}
-                    </div>
-                </div>
-                <div className="p-2 rounded-md bg-cyan-500/10">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 inline-block ltr:mr-1 rtl:ml-1 text-cyan-600 dark:text-cyan-300">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                      </svg>
-                      {t('targetPriceSellSignal')}
-                    </div>
-                    <span className="text-cyan-600 dark:text-cyan-300 font-mono text-lg font-bold">${stock.targetPrice.toFixed(2)}</span>
-                </div>
-                <div className="p-2 rounded-md bg-red-500/10">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4 inline-block ltr:mr-1 rtl:ml-1 text-red-600 dark:text-red-400">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                      </svg>
-                      {t('stopLossSellSignal')}
-                    </div>
-                    <span className="text-red-600 dark:text-red-400 font-mono text-lg font-bold">${stock.stopLoss.toFixed(2)}</span>
-                </div>
-            </div>
-            <p className="text-xs text-center text-gray-500 pt-2">{t('disclaimer')}</p>
-        </div>
-      )} */}
-
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('detailedAnalysis')}</h3>
         <p className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">{stock.analysis}</p>
@@ -96,13 +56,48 @@ const StockCard: React.FC<StockCardProps> = ({ stock, isListContext = false, sty
         ${showChart ? 'max-h-[320px] opacity-100' : 'max-h-0 opacity-0'}
       `}>
           {showChart && (
-            // Removed chart interval selection buttons as per user request
-            <iframe
-              src={`https://s.tradingview.com/widgetembed/?symbol=${stock.ticker}&interval=D&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=${document.documentElement.classList.contains('dark') ? 'dark' : 'light'}&style=1&timezone=Etc%2FUTC&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=[]&disabled_features=[]&locale=${isRTL ? 'ar_AE' : 'en'}&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${stock.ticker}`}
-              className="w-full h-[280px] border-0"
-              title={`${stock.ticker} Chart`}
-              allowFullScreen
-            ></iframe>
+            <>
+              <div className="flex justify-center gap-2 p-2 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-600">
+                <button
+                  onClick={() => setChartInterval('1h')}
+                  className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors duration-200 ${
+                    chartInterval === '1h' ? 'bg-cyan-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('chartInterval1h')}
+                </button>
+                <button
+                  onClick={() => setChartInterval('2h')}
+                  className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors duration-200 ${
+                    chartInterval === '2h' ? 'bg-cyan-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('chartInterval2h')}
+                </button>
+                <button
+                  onClick={() => setChartInterval('4h')}
+                  className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors duration-200 ${
+                    chartInterval === '4h' ? 'bg-cyan-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('chartInterval4h')}
+                </button>
+                <button
+                  onClick={() => setChartInterval('D')}
+                  className={`px-3 py-1 text-sm font-semibold rounded-md transition-colors duration-200 ${
+                    chartInterval === 'D' ? 'bg-cyan-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('chartIntervalD')}
+                </button>
+              </div>
+              <iframe
+                src={`https://s.tradingview.com/widgetembed/?symbol=${stock.ticker}&interval=${chartInterval}&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=[]&theme=${document.documentElement.classList.contains('dark') ? 'dark' : 'light'}&style=1&timezone=Etc%2FUTC&studies_overrides=%7B%7D&overrides=%7B%7D&enabled_features=[]&disabled_features=[]&locale=${isRTL ? 'ar_AE' : 'en'}&utm_source=localhost&utm_medium=widget&utm_campaign=chart&utm_term=${stock.ticker}`}
+                className="w-full h-[280px] border-0"
+                title={`${stock.ticker} Chart`}
+                allowFullScreen
+              ></iframe>
+            </>
           )}
         </div>
     </div>
