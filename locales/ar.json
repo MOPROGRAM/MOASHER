@@ -25,5 +25,14 @@
   "or": "أو",
   "analysisResultTitle": "نتيجة التحليل",
   "notAvailableAbbr": "غير متاح",
-  "showOnlyActionableOpportunities": "إظهار الفرص ذات خطط التداول المحددة فقط"
+  "showOnlyActionableOpportunities": "إظهار الفرص ذات خطط التداول المحددة فقط",
+  "priceRange": "نطاق السعر",
+  "allPrices": "جميع الأسعار",
+  "priceRange0_5": "0 - 5 دولار",
+  "priceRange5_10": "5 - 10 دولار",
+  "priceRange10_20": "10 - 20 دولار",
+  "priceRange20_50": "20 - 50 دولار",
+  "priceRange50_100": "50 - 100 دولار",
+  "priceRange100_200": "100 - 200 دولار",
+  "priceRange200_plus": "أكثر من 200 دولار"
 }

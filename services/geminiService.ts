@@ -20,11 +20,11 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en'): Promise<St
     const langInstructions = {
         ar: {
             langName: "Arabic (العربية الفصحى)",
-            prompt: `الرجاء تزويدي بقائمة من 45-50 سهمًا أمريكيًا تمثل فرص شراء قوية عند قاع السوينج لليوم بتاريخ ${today}. يجب أن يقدم كل سهم خطة تداول متكاملة (نقاط دخول، هدف، وقف خسارة). ركز فقط على تحديد فرص قاع السوينج الواضحة. إذا لم يكن السهم في قاع سوينج واضح، فلا تضمنه في القائمة.`
+            prompt: `الرجاء تزويدي بقائمة من 100 سهم أمريكي تمثل فرص شراء قوية عند قاع السوينج لليوم بتاريخ ${today}. يجب أن يقدم كل سهم خطة تداول متكاملة (نقاط دخول، هدف، وقف خسارة). ركز فقط على تحديد فرص قاع السوينج الواضحة. إذا لم يكن السهم في قاع سوينج واضح، فلا تضمنه في القائمة.`
         },
         en: {
             langName: "English",
-            prompt: `Please provide me with a list of 45-50 US stocks that represent strong buying opportunities at a Swing Channel Low for today, ${today}. Each stock must include a complete trading plan (entry points, target, stop loss). Focus strictly on identifying clear Swing Channel Low opportunities. If a stock is not at a clear swing low, do not include it in the list.`
+            prompt: `Please provide me with a list of 100 US stocks that represent strong buying opportunities at a Swing Channel Low for today, ${today}. Each stock must include a complete trading plan (entry points, target, stop loss). Focus strictly on identifying clear Swing Channel Low opportunities. If a stock is not at a clear swing low, do not include it in the list.`
         }
     }
 
@@ -32,7 +32,7 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en'): Promise<St
     const systemInstruction = `
 You are an expert technical analyst in the US stock market, specializing in swing and trend strategies.
 Your analysis is based on interpreting technical charts, similar to how one would analyze TradingView charts.
-Your task is to identify 45 to 50 US stocks with strong entry opportunities for today, ${today}, based on advanced technical analysis.
+Your task is to identify 100 US stocks with strong entry opportunities for today, ${today}, based on advanced technical analysis.
 
 CURRENT_DATE_FOR_ANALYSIS: ${today}
 
@@ -149,7 +149,7 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
         const langInstructions = {
             ar: {
                 langName: "Arabic (العربية الفصحى)",
-                prompt: `الرجاء تحليل السهم الأمريكي برمز '${ticker}' لليوم بتاريخ ${today}. هل يمثل فرصة "قاع سوينج" حسب المعايير الفنية الإلزامية؟ إذا كانت هناك فرصة دخول حالية، قدم خطة تداول كاملة. إذا لم تكن هناك فرصة، وضح ذلك في التحليل وأعد قيم الخطة (نقاط الدخول، الهدف، الوقف) كأصفار.`
+                prompt: `الرجاء تحليل السهم الأمريكي برمز '${ticker}' لليوم بتاريخ ${today}. هل يمثل فرصة "قاع سوينج" حسب المعايير الفنية الإلزامية؟ إذا كانت هناك فرصة دخول حالية، قدم خطة تداول كاملة. إذا لم تكن هناك فرصة، وضح ذلك في التحليل وأعد قيم الخطdة (نقاط الدخول، الهدف، الوقف) كأصفار.`
             },
             en: {
                 langName: "English",

@@ -25,5 +25,14 @@
   "or": "OR",
   "analysisResultTitle": "Analysis Result",
   "notAvailableAbbr": "N/A",
-  "showOnlyActionableOpportunities": "Show only opportunities with specific trading plans"
+  "showOnlyActionableOpportunities": "Show only opportunities with specific trading plans",
+  "priceRange": "Price Range",
+  "allPrices": "All Prices",
+  "priceRange0_5": "$0 - $5",
+  "priceRange5_10": "$5 - $10",
+  "priceRange10_20": "$10 - $20",
+  "priceRange20_50": "$20 - $50",
+  "priceRange50_100": "$50 - $100",
+  "priceRange100_200": "$100 - $200",
+  "priceRange200_plus": "$200+"
 }

@@ -41,19 +41,13 @@ const App: React.FC = () => {
   const { t, language } = useLanguage();
 
   // Filter state for actionable opportunities
-  // Removed filtersVisible state as per user request to always show actionable opportunities
+  const [filtersVisible, setFiltersVisible] = useState<boolean>(true); // Reintroduce filter visibility
   const [showOnlyActionableOpportunities, setShowOnlyActionableOpportunities] = useState<boolean>(true);
-
-
-  // Removed all sector, sort, market cap, volume, debt, interest filters
-  // const sectors = useMemo(() => {
-  //   if (allStocks.length === 0) return [];
-  //   const uniqueSectors = new Set(allStocks.map(stock => stock.sector));
-  //   return ['all', ...Array.from(uniqueSectors).sort()];
-  // }, [allStocks]);
+  const [selectedPriceRange, setSelectedPriceRange] = useState<'all' | '0-5' | '5-10' | '10-20' | '20-50' | '50-100' | '100-200' | '200+'>('all'); // New state for price range filter
 
   const resetFilters = () => {
     setShowOnlyActionableOpportunities(true);
+    setSelectedPriceRange('all'); // Reset price range filter
   };
   
   const handleFetchStocks = useCallback(async () => {
@@ -97,21 +91,37 @@ const App: React.FC = () => {
   }, [tickerInput, language]);
 
 
-  // applyShariaDefaults is no longer relevant without numerical filters
-  // const applyShariaDefaults = () => {
-  //   setMaxDebtRatio('30');
-  //   setMaxInterestRatio('5');
-  //   setMinVolume('1000000');
-  // };
-
   useEffect(() => {
     let stocksToProcess = [...allStocks];
+    
     // Filter for actionable opportunities (always active)
-    // This filter is always active now as per user request to only show swing low opportunities
-    if (showOnlyActionableOpportunities) { // This condition will always be true
+    if (showOnlyActionableOpportunities) { 
         stocksToProcess = stocksToProcess.filter(stock => 
             Array.isArray(stock.entryPoints) && stock.entryPoints.length > 0 && stock.entryPoints[0] > 0
         );
+    }
+
+    // Apply price range filter
+    if (selectedPriceRange !== 'all') {
+      stocksToProcess = stocksToProcess.filter(stock => {
+        const entryPrice = stock.entryPoints && stock.entryPoints.length > 0 ? stock.entryPoints[0] : Infinity;
+        if (selectedPriceRange === '0-5') {
+          return entryPrice > 0 && entryPrice < 5;
+        } else if (selectedPriceRange === '5-10') {
+          return entryPrice >= 5 && entryPrice < 10;
+        } else if (selectedPriceRange === '10-20') {
+          return entryPrice >= 10 && entryPrice < 20;
+        } else if (selectedPriceRange === '20-50') {
+          return entryPrice >= 20 && entryPrice < 50;
+        } else if (selectedPriceRange === '50-100') {
+          return entryPrice >= 50 && entryPrice < 100;
+        } else if (selectedPriceRange === '100-200') {
+          return entryPrice >= 100 && entryPrice < 200;
+        } else if (selectedPriceRange === '200+') {
+          return entryPrice >= 200;
+        }
+        return true;
+      });
     }
 
     // Sort by the lowest entry price first
@@ -121,19 +131,8 @@ const App: React.FC = () => {
         return priceA - priceB;
     });
 
-    // Removed all other filtering logic
     setFilteredStocks(stocksToProcess);
-  }, [allStocks, showOnlyActionableOpportunities]);
-
-  // Removed FilterInput component as numerical filters are gone
-  // const FilterInput: React.FC<{label: string, id: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, type?: string, placeholder?: string, min?: number, max?: number}> = 
-  //   ({label, id, value, onChange, type="number", placeholder, min, max}) => (
-  //   <div>
-  //     <label htmlFor={id} className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
-  //     <input id={id} type={type} value={value} onChange={onChange} placeholder={placeholder} min={min} max={max}
-  //            className="w-full bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md p-2 focus:ring-cyan-500 focus:border-cyan-500 placeholder-gray-500" />
-  //   </div>
-  // );
+  }, [allStocks, showOnlyActionableOpportunities, selectedPriceRange]);
 
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8">
@@ -156,7 +155,7 @@ const App: React.FC = () => {
       
         {/* --- Single Stock Analysis Section --- */}
         <div className="mb-12 p-6 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg max-w-3xl mx-auto">
-            <h2 className="text-xl font-bold mb-2 %>%text-center">{t('analyzeSpecificStockTitle')}</h2>
+            <h2 className="text-xl font-bold mb-2 text-center">{t('analyzeSpecificStockTitle')}</h2>
             <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-4">{t('analyzeSpecificStockDescription')}</p>
             <div className="flex flex-col sm:flex-row gap-4">
                 <input
@@ -227,8 +226,7 @@ const App: React.FC = () => {
 
         {allStocks.length > 0 && !isLoading && (
           <div className="max-w-5xl mx-auto mb-8">
-            {/* Removed filter visibility button and filter UI as only actionable opportunities are shown */}
-            {/* <div className="text-center mb-4">
+            <div className="text-center mb-4">
               <button onClick={() => setFiltersVisible(!filtersVisible)} className="font-semibold text-cyan-600 dark:text-cyan-400 hover:underline">
                 {filtersVisible ? t('hideFilters') : t('showFilters')}
               </button>
@@ -242,11 +240,35 @@ const App: React.FC = () => {
                             id="actionable-filter"
                             type="checkbox"
                             checked={showOnlyActionableOpportunities}
-                            onChange={(e) => setShowOnlyActionableOpportunities(e.target.checked)}
+                            // Always true for this app as per user request to only show actionable
+                            onChange={() => setShowOnlyActionableOpportunities(true)} 
                             className="form-checkbox h-5 w-5 text-cyan-600 dark:text-cyan-400 rounded focus:ring-cyan-500"
+                            aria-label={t('showOnlyActionableOpportunities')}
+                            disabled // Disable checkbox as it's always true
                         />
                         <span>{t('showOnlyActionableOpportunities')}</span>
                     </label>
+                    <div>
+                        <label htmlFor="price-range-filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            {t('priceRange')}
+                        </label>
+                        <select
+                            id="price-range-filter"
+                            value={selectedPriceRange}
+                            onChange={(e) => setSelectedPriceRange(e.target.value as typeof selectedPriceRange)}
+                            className="w-full bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md p-2 focus:ring-cyan-500 focus:border-cyan-500"
+                            aria-label={t('priceRange')}
+                        >
+                            <option value="all">{t('allPrices')}</option>
+                            <option value="0-5">{t('priceRange0_5')}</option>
+                            <option value="5-10">{t('priceRange5_10')}</option>
+                            <option value="10-20">{t('priceRange10_20')}</option>
+                            <option value="20-50">{t('priceRange20_50')}</option>
+                            <option value="50-100">{t('priceRange50_100')}</option>
+                            <option value="100-200">{t('priceRange100_200')}</option>
+                            <option value="200+">{t('priceRange200_plus')}</option>
+                        </select>
+                    </div>
                 </div>
                 <div className="flex flex-wrap gap-4 justify-center pt-4 border-t border-gray-200 dark:border-gray-700">
                   <button onClick={resetFilters} className="px-4 py-2 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-500 text-white font-semibold rounded-lg transition-colors">
@@ -254,7 +276,7 @@ const App: React.FC = () => {
                   </button>
                 </div>
               </div>
-            )} */}
+            )}
           </div>
         )}
 
@@ -281,7 +303,7 @@ const App: React.FC = () => {
                     <p className="text-xl">{t('noResults')}</p>
                 </div>
             )}
-            <div className="grid grid-cols-1 lg:grid-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {filteredStocks.map((stock, index) => (
                 <StockCard key={`${stock.ticker}-${index}`} stock={stock} isListContext={true} initialShowChart={true} style={{ animationDelay: `${index * 0.1}s` }} />
             ))}
