@@ -38,6 +38,11 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en'): Promise<St
     3.  **Confirmation of Bounce:** There MUST be technical evidence of a potential bounce or reversal from the support line.
     4.  **Focus:** Only include stocks that meet ALL of these criteria for a clear 'Swing Channel Low' opportunity.
 
+    **MANDATORY SHARIA COMPLIANCE FILTERING:**
+    -   **Exclude Banks:** Do NOT include any banking institutions or financial services companies that primarily deal with interest.
+    -   **Exclude Alcohol/Gambling:** Do NOT include companies whose primary business involves alcohol production/distribution or gambling.
+    -   **Exclude Interest-Based Lending (Riba):** Do NOT include companies that engage in significant interest-based lending to individuals or corporations.
+
     **OUTPUT DIRECTIVES (CRITICAL - NO NUMERICAL DATA FROM GEMINI):**
     - **NO EXTERNAL DATA:** You are **STRICTLY FORBIDDEN** from providing any numerical stock data such as 'price', 'volume', 'marketCap', 'sector', 'debtToAssetsRatio', 'interestIncomeRatio', 'financialsDate', or 'priceDataDate'.
     - **PURELY ANALYTICAL OUTPUT:** Your output is purely analytical and textual. Your internal model knowledge and analysis are the sole source for identifying opportunities and crafting the trading plan.
@@ -134,6 +139,11 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
         2.  **Contact with Support:** The stock's price action MUST be touching or have just touched the lower support trendline.
         3.  **Confirmation of Bounce:** There MUST be technical evidence of a potential bounce or reversal from the support line.
         
+        **MANDATORY SHARIA COMPLIANCE FILTERING:**
+        -   **Exclude Banks:** Do NOT include any banking institutions or financial services companies that primarily deal with interest.
+        -   **Exclude Alcohol/Gambling:** Do NOT include companies whose primary business involves alcohol production/distribution or gambling.
+        -   **Exclude Interest-Based Lending (Riba):** Do NOT include companies that engage in significant interest-based lending to individuals or corporations.
+
         **OUTPUT DIRECTIVES (CRITICAL - NO NUMERICAL DATA FROM GEMINI):**
         - **NO EXTERNAL DATA:** You are **STRICTLY FORBIDDEN** from providing any numerical stock data such as 'price', 'volume', 'marketCap', 'sector', 'debtToAssetsRatio', 'interestIncomeRatio', 'financialsDate', or 'priceDataDate'.
         - **PURELY ANALYTICAL OUTPUT:** Your output is purely analytical and textual. Your internal model knowledge and analysis are the sole source for identifying opportunities and crafting the trading plan.
