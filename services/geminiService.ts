@@ -31,7 +31,7 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
   
   try {
     const API_KEY = process.env.API_KEY;
-    // The GoogleGenAI constructor will handle the API_KEY check, no need for explicit throw here.
+    // Removed explicit API_KEY_NOT_SET check, relying on GoogleGenAI to handle if missing
     const ai = new GoogleGenAI({ apiKey: API_KEY });
 
     const today = new Date().toISOString().split('T')[0];
@@ -102,10 +102,10 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
     // Use parts array for contents to ensure correct type handling
     const contents = { parts: [{ text: langInstructions[language].prompt }] };
     
+    // Fix: Moved `signal` from `config` to the top-level parameters of `generateContent`
     const response = await ai.models.generateContent({
       model: "gemini-2.5-pro",
       contents: contents,
-      // Fix: Move 'signal' from 'config' to the top level of the request object.
       signal: signal, // Pass the AbortSignal here
       config: {
         systemInstruction: systemInstruction,
@@ -174,8 +174,7 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
     if (error.name === 'AbortError') {
         throw error; // Re-throw AbortError to be caught by the component
     }
-    // Removed specific API_KEY_PERMISSION_DENIED error handling.
-    // The App.tsx will now handle all errors generically.
+    // Removed specific error handling for API key prompt
     if (error instanceof Error) {
         throw new Error(`Failed to fetch data from Gemini API: ${error.message}`);
     }
@@ -190,7 +189,7 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
 
     try {
       const API_KEY = process.env.API_KEY;
-      // The GoogleGenAI constructor will handle the API_KEY check, no need for explicit throw here.
+      // Removed explicit API_KEY_NOT_SET check, relying on GoogleGenAI to handle if missing
       const ai = new GoogleGenAI({ apiKey: API_KEY });
 
         const today = new Date().toISOString().split('T')[0];
@@ -202,7 +201,7 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
                     `الرجاء تحليل السهم الأمريكي برمز '${ticker}' لليوم بتاريخ ${today}.`,
                     `هل يمثل فرصة "قاع سوينج" حسب المعايير الفنية الإلزامية؟`,
                     `إذا كانت هناك فرصة دخول حالية، قدم خطة تداول كاملة مع التركيز على نقاط الدخول المثالية التي تمثل "نقاط الطعم".`,
-                    `إذا لم تكن هناك فرصة، وضح ذلك في التحليل وأعد قيم الخطة (نقاط الدخول، الهدف، الوقف) كأصفار.`,
+                    `إذا لم تكن هناك فرصة، وضح ذلك في التحليل وأعد قيم الخطdة (نقاط الدخول، الهدف، الوقف) كأصفار.`,
                 ].join(' ')
             },
             en: {
@@ -261,10 +260,10 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
         // Use parts array for contents to ensure correct type handling
         const contents = { parts: [{ text: langInstructions[language].prompt }] };
 
+        // Fix: Moved `signal` from `config` to the top-level parameters of `generateContent`
         const response = await ai.models.generateContent({
             model: "gemini-2.5-pro",
             contents: contents,
-            // Fix: Move 'signal' from 'config' to the top level of the request object.
             signal: signal, // Pass the AbortSignal here
             config: {
                 systemInstruction: systemInstruction,
@@ -331,8 +330,7 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
         if (error.name === 'AbortError') {
             throw error; // Re-throw AbortError to be caught by the component
         }
-        // Removed specific API_KEY_PERMISSION_DENIED error handling.
-        // The App.tsx will now handle all errors generically.
+        // Removed specific error handling for API key prompt
         if (error instanceof Error) {
             // Fix: Corrected string concatenation to resolve "Cannot find name 'ticker'"
             throw new Error(`Failed to fetch data from Gemini API for ${ticker}: ${error.message}`);
