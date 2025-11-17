@@ -1,5 +1,4 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { getRuntimeApiKey } from '../utils/apiKeys';
 import type { StockOpportunity } from '../types';
 
 export type PriceRange = 'all' | '0-5' | '5-10' | '10-20' | '20-50' | '50-100' | '100-200' | '200+';
@@ -30,12 +29,10 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
   let rawText: string;
   let data: StockOpportunity[];
   
-        try {
-        const API_KEY = getRuntimeApiKey();
-        if (!API_KEY) {
-            throw new Error("API_KEY_NOT_SET"); // Throw specific error for App.tsx to catch
-        }
-        const ai = new GoogleGenAI({ apiKey: API_KEY });
+  try {
+    const API_KEY = process.env.API_KEY;
+    // The GoogleGenAI constructor will handle the API_KEY check, no need for explicit throw here.
+    const ai = new GoogleGenAI({ apiKey: API_KEY });
 
     const today = new Date().toISOString().split('T')[0];
     const priceConstraint = getPriceRangeConstraint(priceRange, language);
@@ -108,6 +105,8 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
     const response = await ai.models.generateContent({
       model: "gemini-2.5-pro",
       contents: contents,
+      // Fix: Move 'signal' from 'config' to the top level of the request object.
+      signal: signal, // Pass the AbortSignal here
       config: {
         systemInstruction: systemInstruction,
         temperature: 0.2,
@@ -134,7 +133,6 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
             required: ["companyName", "ticker", "exchange", "reason", "analysis", "entryPoints", "stopLoss", "targetPrice"],
           },
         },
-        signal: signal, // Pass the AbortSignal here
       },
     });
 
@@ -176,10 +174,8 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
     if (error.name === 'AbortError') {
         throw error; // Re-throw AbortError to be caught by the component
     }
-    // Check for permission denied errors and specific "Requested entity was not found" errors
-    if (error instanceof Error && (error.message.includes("PERMISSION_DENIED") || error.message.includes("Requested entity was not found"))) {
-        throw new Error("API_KEY_PERMISSION_DENIED"); // Throw specific error for App.tsx to catch
-    }
+    // Removed specific API_KEY_PERMISSION_DENIED error handling.
+    // The App.tsx will now handle all errors generically.
     if (error instanceof Error) {
         throw new Error(`Failed to fetch data from Gemini API: ${error.message}`);
     }
@@ -192,12 +188,10 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
     let rawText: string;
     let data: StockOpportunity;
 
-        try {
-            const API_KEY = getRuntimeApiKey();
-            if (!API_KEY) {
-                throw new Error("API_KEY_NOT_SET"); // Throw specific error for App.tsx to catch
-            }
-            const ai = new GoogleGenAI({ apiKey: API_KEY });
+    try {
+      const API_KEY = process.env.API_KEY;
+      // The GoogleGenAI constructor will handle the API_KEY check, no need for explicit throw here.
+      const ai = new GoogleGenAI({ apiKey: API_KEY });
 
         const today = new Date().toISOString().split('T')[0];
         const langInstructions = {
@@ -270,6 +264,8 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
         const response = await ai.models.generateContent({
             model: "gemini-2.5-pro",
             contents: contents,
+            // Fix: Move 'signal' from 'config' to the top level of the request object.
+            signal: signal, // Pass the AbortSignal here
             config: {
                 systemInstruction: systemInstruction,
                 temperature: 0.2,
@@ -293,7 +289,6 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
                   },
                   required: ["companyName", "ticker", "exchange", "reason", "analysis", "entryPoints", "stopLoss", "targetPrice"],
                 },
-                signal: signal, // Pass the AbortSignal here
             },
         });
 
@@ -336,10 +331,8 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
         if (error.name === 'AbortError') {
             throw error; // Re-throw AbortError to be caught by the component
         }
-        // Check for permission denied errors and specific "Requested entity was not found" errors
-        if (error instanceof Error && (error.message.includes("PERMISSION_DENIED") || error.message.includes("Requested entity was not found"))) {
-            throw new Error("API_KEY_PERMISSION_DENIED"); // Throw specific error for App.tsx to catch
-        }
+        // Removed specific API_KEY_PERMISSION_DENIED error handling.
+        // The App.tsx will now handle all errors generically.
         if (error instanceof Error) {
             // Fix: Corrected string concatenation to resolve "Cannot find name 'ticker'"
             throw new Error(`Failed to fetch data from Gemini API for ${ticker}: ${error.message}`);

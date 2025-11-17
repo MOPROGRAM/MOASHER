@@ -1,15 +1,3 @@
-# Node
-node_modules/
-
-# Vite env files
-.env.local
-.env.*.local
-
-# Logs
-.npmrc
-.yarnrc
-.expo
-.DS_Store
 # Logs
 logs
 *.log

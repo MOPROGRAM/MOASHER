@@ -6,7 +6,6 @@ import LoadingSpinner from './components/LoadingSpinner';
 import { useLanguage } from './contexts/LanguageContext';
 import ThemeToggle from './components/ThemeToggle';
 import LanguageSwitcher from './components/LanguageSwitcher';
-import ApiKeyRequiredPrompt from './components/ApiKeyRequiredPrompt';
 
 
 // This is a mock component to allow interpolation in the translation strings.
@@ -52,27 +51,7 @@ const App: React.FC = () => {
   // Price range is now a PRE-FETCH parameter
   const [selectedPriceRange, setSelectedPriceRange] = useState<PriceRange>('all');
 
-  // API Key selection state
-  const [hasApiKeySelected, setHasApiKeySelected] = useState<boolean>(false);
-
-  // Reusable function to check API key status
-  const checkApiKeyStatus = useCallback(async () => {
-    if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
-      const keySelected = await window.aistudio.hasSelectedApiKey();
-      setHasApiKeySelected(keySelected);
-    } else {
-      // If window.aistudio is not available, it means we are likely not in the expected environment
-      // or there's an issue with the iframe integration.
-      // In this case, we MUST set it to false to ensure the prompt is shown.
-      console.warn("window.aistudio or hasSelectedApiKey is not available. Forcing API key prompt.");
-      setHasApiKeySelected(false);
-    }
-  }, []);
-
-  // Effect to check API key on mount and when dependencies change (though checkApiKeyStatus is stable)
-  useEffect(() => {
-    checkApiKeyStatus();
-  }, [checkApiKeyStatus]); // Run on mount
+  // API Key selection state (removed, assuming process.env.API_KEY is always available)
 
   const resetFilters = () => {
     setShowOnlyActionableOpportunities(true);
@@ -91,10 +70,6 @@ const App: React.FC = () => {
   }, [currentSearchAbortController, t]);
 
   const handleFetchStocks = useCallback(async () => {
-    if (!hasApiKeySelected) {
-        setError(t('apiKeyRequired')); // Error before even trying to call service
-        return;
-    }
     setIsLoading(true);
     setError(null);
     setAllStocks([]);
@@ -112,27 +87,18 @@ const App: React.FC = () => {
       if (err instanceof Error) {
         if (err.name === 'AbortError') {
           setError(t('searchCancelled'));
-        } else if (err.message === "API_KEY_NOT_SET") { // Handle specific error from service
-          setError(t('apiKeyNotSetError'));
-          setHasApiKeySelected(false); // Reset key selection state
-        } else if (err.message === "API_KEY_PERMISSION_DENIED") { // Handle specific error from service
-          setError(t('apiKeyPermissionDeniedError'));
-          setHasApiKeySelected(false); // Reset key selection state
-        }
-        else {
-          // For any other error, assume API key might be the issue or connection problem
+        } else {
+          // Generic error handling, as API key selection is no longer managed by UI
           setError(err.message);
-          setHasApiKeySelected(false); // Force re-selection prompt
         }
       } else {
         setError("An unexpected error occurred.");
-        setHasApiKeySelected(false); // Force re-selection prompt
       }
     } finally {
       setIsLoading(false);
       setCurrentSearchAbortController(null);
     }
-  }, [language, selectedPriceRange, hasApiKeySelected, t]);
+  }, [language, selectedPriceRange, t]);
   
   const handleCancelSingleStockAnalysis = useCallback(() => {
     if (currentSingleStockAbortController) {
@@ -145,10 +111,6 @@ const App: React.FC = () => {
 
   const handleAnalyzeSingleStock = useCallback(async () => {
     if (!tickerInput.trim()) return;
-    if (!hasApiKeySelected) {
-        setErrorSingleStockError(t('apiKeyRequired')); // Error before even trying to call service
-        return;
-    }
     setIsSingleStockLoading(true);
     setErrorSingleStockError(null);
     setSingleStockResult(null);
@@ -164,27 +126,18 @@ const App: React.FC = () => {
        if (err instanceof Error) {
         if (err.name === 'AbortError') {
           setErrorSingleStockError(t('analysisCancelled'));
-        } else if (err.message === "API_KEY_NOT_SET") { // Handle specific error from service
-          setErrorSingleStockError(t('apiKeyNotSetError'));
-          setHasApiKeySelected(false); // Reset key selection state
-        } else if (err.message === "API_KEY_PERMISSION_DENIED") { // Handle specific error from service
-          setErrorSingleStockError(t('apiKeyPermissionDeniedError'));
-          setHasApiKeySelected(false); // Reset key selection state
-        }
-        else {
-          // For any other error, assume API key might be the issue or connection problem
+        } else {
+          // Generic error handling, as API key selection is no longer managed by UI
           setErrorSingleStockError(err.message);
-          setHasApiKeySelected(false); // Force re-selection prompt
         }
       } else {
         setErrorSingleStockError("An unexpected error occurred during analysis.");
-        setHasApiKeySelected(false); // Force re-selection prompt
       }
     } finally {
       setIsSingleStockLoading(false);
       setCurrentSingleStockAbortController(null);
     }
-  }, [tickerInput, language, hasApiKeySelected, t]);
+  }, [tickerInput, language, t]);
 
 
   useEffect(() => {
@@ -210,12 +163,11 @@ const App: React.FC = () => {
     setFilteredStocks(stocksToProcess);
   }, [allStocks, showOnlyActionableOpportunities]); // selectedPriceRange removed from dependencies here
 
-  // Effect to re-fetch data when language changes, only if API key is selected
+  // Effect to re-fetch data when language changes
   useEffect(() => {
-    // Only attempt to re-fetch if an API key has been selected AND
-    // if there was previous content to avoid unnecessary re-fetches on initial load or if no content was ever loaded.
+    // Only attempt to re-fetch if there was previous content to avoid unnecessary re-fetches on initial load or if no content was ever loaded.
     // Also, ensure no loading is currently active to prevent multiple calls
-    if (hasApiKeySelected && !isLoading && !isSingleStockLoading && (allStocks.length > 0 || singleStockResult)) {
+    if (!isLoading && !isSingleStockLoading && (allStocks.length > 0 || singleStockResult)) {
         // If there's currently a single stock analysis result, re-analyze it
         if (singleStockResult && tickerInput.trim()) {
             handleAnalyzeSingleStock();
@@ -225,7 +177,7 @@ const App: React.FC = () => {
             handleFetchStocks();
         }
     }
-  }, [language, handleFetchStocks, handleAnalyzeSingleStock, allStocks.length, singleStockResult, tickerInput, isLoading, isSingleStockLoading, hasApiKeySelected]);
+  }, [language, handleFetchStocks, handleAnalyzeSingleStock, allStocks.length, singleStockResult, tickerInput, isLoading, isSingleStockLoading]);
 
 
   return (
@@ -247,12 +199,7 @@ const App: React.FC = () => {
 
       <main className="max-w-7xl mx-auto">
       
-        {/* API Key Required Prompt */}
-        {!hasApiKeySelected && (
-            <div className="mb-12">
-                <ApiKeyRequiredPrompt onApiKeySelected={checkApiKeyStatus} />
-            </div>
-        )}
+        {/* API Key Required Prompt (Removed) */}
       
         {/* --- Single Stock Analysis Section --- */}
         <div className="mb-12 p-6 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg max-w-3xl mx-auto">
@@ -265,11 +212,11 @@ const App: React.FC = () => {
                     onChange={(e) => setTickerInput(e.target.value)}
                     placeholder={t('tickerPlaceholder')}
                     className="flex-grow w-full bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md p-3 focus:ring-cyan-500 focus:border-cyan-500 placeholder-gray-500 uppercase"
-                    disabled={!hasApiKeySelected || isSingleStockLoading}
+                    disabled={isSingleStockLoading}
                 />
                 <button
                     onClick={isSingleStockLoading ? handleCancelSingleStockAnalysis : handleAnalyzeSingleStock}
-                    disabled={!tickerInput || !hasApiKeySelected}
+                    disabled={!tickerInput}
                     className="px-6 py-3 bg-teal-600 text-white font-bold rounded-lg shadow-md hover:bg-teal-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-400 disabled:bg-gray-500 dark:disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
                     aria-label={isSingleStockLoading ? t('cancelButton') : t('analyzeButton')}
                 >
@@ -300,7 +247,7 @@ const App: React.FC = () => {
                     onChange={(e) => setSelectedPriceRange(e.target.value as PriceRange)}
                     className="flex-grow w-full bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md p-3 focus:ring-cyan-500 focus:border-cyan-500"
                     aria-label={t('priceRange')}
-                    disabled={!hasApiKeySelected || isLoading}
+                    disabled={isLoading}
                 >
                     <option value="all">{t('allPrices')}</option>
                     <option value="0-5">{t('priceRange0_5')}</option>
@@ -317,9 +264,9 @@ const App: React.FC = () => {
         <div className="flex justify-center mb-12">
           <button
             onClick={isLoading ? handleCancelSearch : handleFetchStocks}
-            disabled={!hasApiKeySelected}
             className="px-8 py-4 bg-cyan-600 text-white font-bold text-xl rounded-lg shadow-lg hover:bg-cyan-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-400 disabled:bg-gray-500 dark:disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100 flex items-center gap-3"
             aria-label={isLoading ? t('cancelButton') : t('updateButton')}
+            disabled={isLoading}
           >
             {isLoading ? (
               <>
@@ -341,21 +288,6 @@ const App: React.FC = () => {
              <div className="text-center bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg max-w-2xl mx-auto mb-8" role="alert">
                 <strong className="font-bold">{t('errorOccurred')}</strong>
                 <span className="block sm:inline ltr:ml-2 rtl:mr-2">{singleStockError}</span>
-                {/* Add a specific message/action if the error suggests API key re-selection */}
-                {(!hasApiKeySelected && window.aistudio && typeof window.aistudio.openSelectKey === 'function') && (
-                    <button 
-                        onClick={async () => {
-                            if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
-                                await window.aistudio.openSelectKey();
-                                await checkApiKeyStatus(); // Re-check after user interacts with dialog
-                            }
-                        }}
-                        className="mt-4 block mx-auto px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors duration-300 transform hover:scale-105"
-                        aria-label={t('selectApiKeyAgain')}
-                    >
-                        {t('selectApiKeyAgain')}
-                    </button>
-                )}
             </div>
         )}
 
@@ -407,32 +339,12 @@ const App: React.FC = () => {
           <div className="text-center bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg max-w-2xl mx-auto" role="alert">
             <strong className="font-bold">{t('errorOccurred')}</strong>
             <span className="block sm:inline ltr:ml-2 rtl:mr-2">{error}</span>
-            {/* Add a specific message/action if the error suggests API key re-selection */}
-            {(!hasApiKeySelected && window.aistudio && typeof window.aistudio.openSelectKey === 'function') && (
-                <button 
-                    onClick={async () => {
-                        if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
-                            await window.aistudio.openSelectKey();
-                            await checkApiKeyStatus(); // Re-check after user interacts with dialog
-                        }
-                    }}
-                    className="mt-4 block mx-auto px-6 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors duration-300 transform hover:scale-105"
-                    aria-label={t('selectApiKeyAgain')}
-                >
-                    {t('selectApiKeyAgain')}
-                </button>
-            )}
           </div>
         )}
         
-        {!isLoading && !isSingleStockLoading && !error && !singleStockError && allStocks.length === 0 && !singleStockResult && hasApiKeySelected && (
+        {!isLoading && !isSingleStockLoading && !error && !singleStockError && allStocks.length === 0 && !singleStockResult && (
            <div className="text-center text-gray-500 dark:text-gray-500 py-16">
              <p className="text-xl">{t('getStarted')}</p>
-           </div>
-        )}
-         {!isLoading && !isSingleStockLoading && !error && !singleStockError && allStocks.length === 0 && !singleStockResult && !hasApiKeySelected && (
-           <div className="text-center text-gray-500 dark:text-gray-500 py-16">
-             <p className="text-xl">{t('apiKeyInstructionsInitial')}</p>
            </div>
         )}
 

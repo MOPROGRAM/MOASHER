@@ -9,7 +9,6 @@
   "foundOpportunities": "Found <1>{{count}}</1> opportunities matching the criteria.",
   "noResults": "No results match the current filters.",
   "getStarted": "Start by analyzing a specific stock, or press the button to discover new opportunities.",
-  "apiKeyInstructionsInitial": "To fully use the app, please select your Gemini API key. Without it, market analysis cannot be performed.",
   "errorOccurred": "An error occurred!",
   "analyzingMarket": "Analyzing the market...",
   "technicalSummary": "Technical Summary:",
@@ -39,14 +38,7 @@
   "selectPriceRangeForSearch": "Select Price Range for Search",
   "shariaDisclaimer": "Important Notice: Users MUST verify the Sharia compliance of any stock using specialized websites and methods before trading. This application provides technical analysis only and is not responsible for financial decisions.",
   "toggleTheme": "Toggle theme",
-  "selectApiKeyAgain": "Re-select API Key",
-  "apiKeyRequired": "Gemini API Key Required",
-  "apiKeyPromptText": "To use this feature, please select your Gemini API key. This is essential to enable market analysis.",
-  "selectApiKeyButton": "Select API Key",
-  "billingDocsLink": "Billing Documentation",
   "cancelButton": "Cancel",
   "searchCancelled": "Search cancelled.",
-  "analysisCancelled": "Analysis cancelled.",
-  "apiKeyNotSetError": "Gemini API key not set. Please select a key to proceed.",
-  "apiKeyPermissionDeniedError": "Gemini API key permissions denied. Please re-select a valid key."
+  "analysisCancelled": "Analysis cancelled."
 }

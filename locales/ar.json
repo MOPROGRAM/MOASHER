@@ -9,7 +9,6 @@
   "foundOpportunities": "تم العثور على <1>{{count}}</1> فرصة تطابق المعايير المحددة.",
   "noResults": "لا توجد نتائج تطابق فلاتر البحث الحالية.",
   "getStarted": "ابدأ بتحليل سهم محدد، أو اضغط على زر تحديث المؤشر لاكتشاف الفرص.",
-  "apiKeyInstructionsInitial": "للاستفادة الكاملة من التطبيق، يرجى تحديد مفتاح Gemini API الخاص بك. بدون هذا المفتاح، لا يمكن إجراء التحليلات.",
   "errorOccurred": "حدث خطأ!",
   "analyzingMarket": "جاري تحليل السوق...",
   "technicalSummary": "الملخص الفني:",
@@ -39,14 +38,7 @@
   "selectPriceRangeForSearch": "اختر نطاق السعر للبحث",
   "shariaDisclaimer": "ملاحظة هامة: يجب على المستخدمين التحقق من توافق أي سهم مع الشريعة الإسلامية باستخدام المواقع والطرق المتخصصة قبل التداول. يقدم هذا التطبيق التحليل الفني فقط وليس مسؤولاً عن القرارات المالية.",
   "toggleTheme": "تبديل المظهر",
-  "selectApiKeyAgain": "إعادة تحديد مفتاح API",
-  "apiKeyRequired": "مفتاح Gemini API مطلوب",
-  "apiKeyPromptText": "لاستخدام هذه الميزة، يرجى تحديد مفتاح Gemini API الخاص بك. هذا ضروري لتمكين تحليلات السوق.",
-  "selectApiKeyButton": "تحديد مفتاح API",
-  "billingDocsLink": "وثائق الفوترة",
   "cancelButton": "إلغاء",
   "searchCancelled": "تم إلغاء البحث.",
-  "analysisCancelled": "تم إلغاء التحليل.",
-  "apiKeyNotSetError": "لم يتم تحديد مفتاح Gemini API. يرجى تحديد مفتاح للمتابعة.",
-  "apiKeyPermissionDeniedError": "صلاحيات مفتاح Gemini API غير كافية. يرجى إعادة تحديد مفتاح صالح."
+  "analysisCancelled": "تم إلغاء التحليل."
 }
