@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { getRuntimeApiKey } from '../utils/apiKeys';
 import type { StockOpportunity } from '../types';
 
 export type PriceRange = 'all' | '0-5' | '5-10' | '10-20' | '20-50' | '50-100' | '100-200' | '200+';
@@ -29,12 +30,12 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
   let rawText: string;
   let data: StockOpportunity[];
   
-  try {
-    const API_KEY = process.env.API_KEY;
-    if (!API_KEY) {
-      throw new Error("API_KEY_NOT_SET"); // Throw specific error for App.tsx to catch
-    }
-    const ai = new GoogleGenAI({ apiKey: API_KEY });
+        try {
+        const API_KEY = getRuntimeApiKey();
+        if (!API_KEY) {
+            throw new Error("API_KEY_NOT_SET"); // Throw specific error for App.tsx to catch
+        }
+        const ai = new GoogleGenAI({ apiKey: API_KEY });
 
     const today = new Date().toISOString().split('T')[0];
     const priceConstraint = getPriceRangeConstraint(priceRange, language);
@@ -191,12 +192,12 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
     let rawText: string;
     let data: StockOpportunity;
 
-    try {
-      const API_KEY = process.env.API_KEY;
-      if (!API_KEY) {
-        throw new Error("API_KEY_NOT_SET"); // Throw specific error for App.tsx to catch
-      }
-      const ai = new GoogleGenAI({ apiKey: API_KEY });
+        try {
+            const API_KEY = getRuntimeApiKey();
+            if (!API_KEY) {
+                throw new Error("API_KEY_NOT_SET"); // Throw specific error for App.tsx to catch
+            }
+            const ai = new GoogleGenAI({ apiKey: API_KEY });
 
         const today = new Date().toISOString().split('T')[0];
         const langInstructions = {

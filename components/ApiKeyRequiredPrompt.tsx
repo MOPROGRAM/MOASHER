@@ -1,4 +1,5 @@
 import React from 'react';
+import { setLocalApiKey } from '../utils/apiKeys';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface ApiKeyRequiredPromptProps {
@@ -16,7 +17,16 @@ const ApiKeyRequiredPrompt: React.FC<ApiKeyRequiredPromptProps> = ({ onApiKeySel
         } else {
             console.error("window.aistudio.openSelectKey is not available.");
             // Provide a user-friendly message or fallback in this rare case
-            alert("API key selection not available in this environment. Please ensure you are running in a supported context.");
+            const manual = confirm("Automatic API key selection not available. Would you like to enter the API key manually?");
+            if (manual) {
+                const entered = prompt("Please paste your Gemini API key (it will be stored locally in your browser):");
+                if (entered && entered.trim()) {
+                    setLocalApiKey(entered.trim());
+                    onApiKeySelected();
+                    return;
+                }
+            }
+            alert("API key selection not available in this environment. Operation cancelled.");
         }
     };
 
