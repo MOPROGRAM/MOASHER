@@ -6,7 +6,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 import { useLanguage } from './contexts/LanguageContext';
 import ThemeToggle from './components/ThemeToggle';
 import LanguageSwitcher from './components/LanguageSwitcher';
-// ApiKeyRequiredPrompt import is removed as the component is no longer used
+
 
 // This is a mock component to allow interpolation in the translation strings.
 // A real library like react-i18next would provide this.
@@ -41,7 +41,6 @@ const App: React.FC = () => {
   const [singleStockError, setErrorSingleStockError] = useState<string | null>(null);
   const [currentSingleStockAbortController, setCurrentSingleStockAbortController] = useState<AbortController | null>(null);
 
-  // API Key related state removed: showApiKeyPrompt, pendingAction
 
   const { t, language } = useLanguage();
 
@@ -52,6 +51,7 @@ const App: React.FC = () => {
   // Price range is now a PRE-FETCH parameter
   const [selectedPriceRange, setSelectedPriceRange] = useState<PriceRange>('all');
 
+  // API Key selection state (removed, assuming process.env.API_KEY is always available)
 
   const resetFilters = () => {
     setShowOnlyActionableOpportunities(true);
@@ -59,7 +59,7 @@ const App: React.FC = () => {
     // would only affect the next fetch, not current filtered results.
     // For now, it's explicitly reset before fetch.
   };
-
+  
   const handleCancelSearch = useCallback(() => {
     if (currentSearchAbortController) {
       currentSearchAbortController.abort();
@@ -69,16 +69,6 @@ const App: React.FC = () => {
     }
   }, [currentSearchAbortController, t]);
 
-  const handleCancelSingleStockAnalysis = useCallback(() => {
-    if (currentSingleStockAbortController) {
-      currentSingleStockAbortController.abort();
-      setErrorSingleStockError(t('analysisCancelled'));
-      setIsSingleStockLoading(false);
-      setCurrentSingleStockAbortController(null);
-    }
-  }, [currentSingleStockAbortController, t]);
-
-  // handleFetchStocks no longer requires checking for API key explicitly
   const handleFetchStocks = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -93,11 +83,14 @@ const App: React.FC = () => {
       // Pass selectedPriceRange to the service
       const opportunities = await fetchStockOpportunities(language, selectedPriceRange, controller.signal);
       setAllStocks(opportunities);
-    } catch (err: any) { // Use 'any' for error to properly check 'name' property
-      if (err.name === 'AbortError') {
-        setError(t('searchCancelled'));
-      } else if (err instanceof Error) {
-        setError(err.message);
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          setError(t('searchCancelled'));
+        } else {
+          // Generic error handling, as API key selection is no longer managed by UI
+          setError(err.message);
+        }
       } else {
         setError("An unexpected error occurred.");
       }
@@ -107,10 +100,17 @@ const App: React.FC = () => {
     }
   }, [language, selectedPriceRange, t]);
   
-  // handleAnalyzeSingleStock no longer requires checking for API key explicitly
+  const handleCancelSingleStockAnalysis = useCallback(() => {
+    if (currentSingleStockAbortController) {
+      currentSingleStockAbortController.abort();
+      setErrorSingleStockError(t('analysisCancelled'));
+      setIsSingleStockLoading(false);
+      setCurrentSingleStockAbortController(null);
+    }
+  }, [currentSingleStockAbortController, t]);
+
   const handleAnalyzeSingleStock = useCallback(async () => {
     if (!tickerInput.trim()) return;
-
     setIsSingleStockLoading(true);
     setErrorSingleStockError(null);
     setSingleStockResult(null);
@@ -122,11 +122,14 @@ const App: React.FC = () => {
     try {
       const result = await fetchSingleStockAnalysis(tickerInput.trim().toUpperCase(), language, controller.signal);
       setSingleStockResult(result);
-    } catch (err: any) { // Use 'any' for error to properly check 'name' property
-      if (err.name === 'AbortError') {
-        setErrorSingleStockError(t('analysisCancelled'));
-      } else if (err instanceof Error) {
-        setErrorSingleStockError(err.message);
+    } catch (err) {
+       if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          setErrorSingleStockError(t('analysisCancelled'));
+        } else {
+          // Generic error handling, as API key selection is no longer managed by UI
+          setErrorSingleStockError(err.message);
+        }
       } else {
         setErrorSingleStockError("An unexpected error occurred during analysis.");
       }
@@ -135,10 +138,8 @@ const App: React.FC = () => {
       setCurrentSingleStockAbortController(null);
     }
   }, [tickerInput, language, t]);
-  
-  // checkApiKeyAndProceed function is removed as it's no longer needed.
-  // handleOpenApiKeySelection function is removed as it's no longer needed.
-  
+
+
   useEffect(() => {
     let stocksToProcess = [...allStocks];
     
@@ -162,8 +163,10 @@ const App: React.FC = () => {
     setFilteredStocks(stocksToProcess);
   }, [allStocks, showOnlyActionableOpportunities]); // selectedPriceRange removed from dependencies here
 
-  // Effect to re-fetch data when language changes, only if there's previous content
+  // Effect to re-fetch data when language changes
   useEffect(() => {
+    // Only attempt to re-fetch if there was previous content to avoid unnecessary re-fetches on initial load or if no content was ever loaded.
+    // Also, ensure no loading is currently active to prevent multiple calls
     if (!isLoading && !isSingleStockLoading && (allStocks.length > 0 || singleStockResult)) {
         // If there's currently a single stock analysis result, re-analyze it
         if (singleStockResult && tickerInput.trim()) {
@@ -195,101 +198,100 @@ const App: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto">
-        {/* ApiKeyRequiredPrompt component removed */}
-
-        {/* Removed conditional rendering based on showApiKeyPrompt */}
-          <>
-            {/* --- Single Stock Analysis Section --- */}
-            <div className="mb-12 p-6 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg max-w-3xl mx-auto">
-                <h2 className="text-xl font-bold mb-2 text-center">{t('analyzeSpecificStockTitle')}</h2>
-                <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-4">{t('analyzeSpecificStockDescription')}</p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                    <input
-                        type="text"
-                        value={tickerInput}
-                        onChange={(e) => setTickerInput(e.target.value)}
-                        placeholder={t('tickerPlaceholder')}
-                        className="flex-grow w-full bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md p-3 focus:ring-cyan-500 focus:border-cyan-500 placeholder-gray-500 uppercase"
-                        disabled={isSingleStockLoading}
-                    />
-                    <button
-                        onClick={isSingleStockLoading ? handleCancelSingleStockAnalysis : handleAnalyzeSingleStock}
-                        disabled={!tickerInput}
-                        className="px-6 py-3 bg-teal-600 text-white font-bold rounded-lg shadow-md hover:bg-teal-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-400 disabled:bg-gray-500 dark:disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
-                        aria-label={isSingleStockLoading ? t('cancelButton') : t('analyzeButton')}
-                    >
-                        {isSingleStockLoading ? (
-                            <>
-                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                <span>{t('cancelButton')}</span>
-                            </>
-                        ) : (
-                            <span>{t('analyzeButton')}</span>
-                        )}
-                    </button>
-                </div>
+      
+        {/* API Key Required Prompt (Removed) */}
+      
+        {/* --- Single Stock Analysis Section --- */}
+        <div className="mb-12 p-6 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg max-w-3xl mx-auto">
+            <h2 className="text-xl font-bold mb-2 text-center">{t('analyzeSpecificStockTitle')}</h2>
+            <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-4">{t('analyzeSpecificStockDescription')}</p>
+            <div className="flex flex-col sm:flex-row gap-4">
+                <input
+                    type="text"
+                    value={tickerInput}
+                    onChange={(e) => setTickerInput(e.target.value)}
+                    placeholder={t('tickerPlaceholder')}
+                    className="flex-grow w-full bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md p-3 focus:ring-cyan-500 focus:border-cyan-500 placeholder-gray-500 uppercase"
+                    disabled={isSingleStockLoading}
+                />
+                <button
+                    onClick={isSingleStockLoading ? handleCancelSingleStockAnalysis : handleAnalyzeSingleStock}
+                    disabled={!isSingleStockLoading && !tickerInput.trim()} 
+                    className="px-6 py-3 bg-teal-600 text-white font-bold rounded-lg shadow-md hover:bg-teal-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-teal-400 disabled:bg-gray-500 dark:disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100 flex items-center justify-center gap-2"
+                    aria-label={isSingleStockLoading ? t('cancelButton') : t('analyzeButton')}
+                >
+                    {isSingleStockLoading ? (
+                        <>
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>{t('cancelButton')}</span>
+                        </>
+                    ) : (
+                        <span>{t('analyzeButton')}</span>
+                    )}
+                </button>
             </div>
-            
-            <div className="text-center mb-12 text-gray-500 dark:text-gray-400">{t('or')}</div>
+        </div>
+        
+        <div className="text-center mb-12 text-gray-500 dark:text-gray-400">{t('or')}</div>
 
-            {/* --- Price Range Selection (Pre-fetch) --- */}
-            <div className="mb-8 p-6 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg max-w-xl mx-auto">
-                <h3 className="text-xl font-bold mb-4 text-center">{t('selectPriceRangeForSearch')}</h3>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <select
-                        id="price-range-pre-fetch"
-                        value={selectedPriceRange}
-                        onChange={(e) => setSelectedPriceRange(e.target.value as PriceRange)}
-                        className="flex-grow w-full bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md p-3 focus:ring-cyan-500 focus:border-cyan-500"
-                        aria-label={t('priceRange')}
-                        disabled={isLoading}
-                    >
-                        <option value="all">{t('allPrices')}</option>
-                        <option value="0-5">{t('priceRange0_5')}</option>
-                        <option value="5-10">{t('priceRange5_10')}</option>
-                        <option value="10-20">{t('priceRange10_20')}</option>
-                        <option value="20-50">{t('priceRange20_50')}</option>
-                        <option value="50-100">{t('priceRange50_100')}</option>
-                        <option value="100-200">{t('priceRange100_200')}</option>
-                        <option value="200+">{t('priceRange200_plus')}</option>
-                    </select>
-                </div>
+        {/* --- Price Range Selection (Pre-fetch) --- */}
+        <div className="mb-8 p-6 bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg max-w-xl mx-auto">
+            <h3 className="text-xl font-bold mb-4 text-center">{t('selectPriceRangeForSearch')}</h3>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <select
+                    id="price-range-pre-fetch"
+                    value={selectedPriceRange}
+                    onChange={(e) => setSelectedPriceRange(e.target.value as PriceRange)}
+                    className="flex-grow w-full bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md p-3 focus:ring-cyan-500 focus:border-cyan-500"
+                    aria-label={t('priceRange')}
+                    disabled={isLoading}
+                >
+                    <option value="all">{t('allPrices')}</option>
+                    <option value="0-5">{t('priceRange0_5')}</option>
+                    <option value="5-10">{t('priceRange5_10')}</option>
+                    <option value="10-20">{t('priceRange10_20')}</option>
+                    <option value="20-50">{t('priceRange20_50')}</option>
+                    <option value="50-100">{t('priceRange50_100')}</option>
+                    <option value="100-200">{t('priceRange100_200')}</option>
+                    <option value="200+">{t('priceRange200_plus')}</option>
+                </select>
             </div>
+        </div>
 
-            <div className="flex justify-center mb-12">
-              <button
-                onClick={isLoading ? handleCancelSearch : handleFetchStocks}
-                className="px-8 py-4 bg-cyan-600 text-white font-bold text-xl rounded-lg shadow-lg hover:bg-cyan-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-400 disabled:bg-gray-500 dark:disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100 flex items-center gap-3"
-                aria-label={isLoading ? t('cancelButton') : t('updateButton')}
-              >
-                {isLoading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>{t('cancelButton')}</span>
-                  </>
-                ) : (
-                  <span>{t('updateButton')}</span>
-                )}
-              </button>
-            </div>
-          </>
+        <div className="flex justify-center mb-12">
+          <button
+            onClick={isLoading ? handleCancelSearch : handleFetchStocks}
+            className="px-8 py-4 bg-cyan-600 text-white font-bold text-xl rounded-lg shadow-lg hover:bg-cyan-500 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-cyan-400 disabled:bg-gray-500 dark:disabled:bg-gray-600 disabled:cursor-not-allowed disabled:scale-100 flex items-center gap-3"
+            aria-label={isLoading ? t('cancelButton') : t('updateButton')}
+            disabled={false}
+          >
+            {isLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>{t('cancelButton')}</span>
+              </>
+            ) : (
+              <span>{t('updateButton')}</span>
+            )}
+          </button>
+        </div>
         
         {(isSingleStockLoading || isLoading) && <LoadingSpinner />}
         
-        {singleStockError && ( // Removed conditional check !showApiKeyPrompt
+        {singleStockError && (
              <div className="text-center bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg max-w-2xl mx-auto mb-8" role="alert">
                 <strong className="font-bold">{t('errorOccurred')}</strong>
                 <span className="block sm:inline ltr:ml-2 rtl:mr-2">{singleStockError}</span>
             </div>
         )}
 
-        {singleStockResult && !isSingleStockLoading && ( // Removed conditional check !showApiKeyPrompt
+        {singleStockResult && !isSingleStockLoading && (
             <div className="max-w-3xl mx-auto mb-8">
                 <h2 className="text-2xl font-bold mb-4 text-center">{t('analysisResultTitle')}</h2>
                 <StockCard stock={singleStockResult} initialShowChart={true} />
@@ -297,7 +299,7 @@ const App: React.FC = () => {
         )}
 
 
-        {allStocks.length > 0 && !isLoading && ( // Removed conditional check !showApiKeyPrompt
+        {allStocks.length > 0 && !isLoading && (
           <div className="max-w-5xl mx-auto mb-8">
             <div className="text-center mb-4">
               <button onClick={() => setFiltersVisible(!filtersVisible)} className="font-semibold text-cyan-600 dark:text-cyan-400 hover:underline">
@@ -333,20 +335,20 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {error && ( // Removed conditional check !showApiKeyPrompt
+        {error && (
           <div className="text-center bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg max-w-2xl mx-auto" role="alert">
             <strong className="font-bold">{t('errorOccurred')}</strong>
             <span className="block sm:inline ltr:ml-2 rtl:mr-2">{error}</span>
           </div>
         )}
         
-        {!isLoading && !isSingleStockLoading && !error && !singleStockError && allStocks.length === 0 && !singleStockResult && ( // Removed conditional check !showApiKeyPrompt
+        {!isLoading && !isSingleStockLoading && !error && !singleStockError && allStocks.length === 0 && !singleStockResult && (
            <div className="text-center text-gray-500 dark:text-gray-500 py-16">
              <p className="text-xl">{t('getStarted')}</p>
            </div>
         )}
 
-        {!isLoading && allStocks.length > 0 && ( // Removed conditional check !showApiKeyPrompt
+        {!isLoading && allStocks.length > 0 && (
           <>
             <div className='text-center mb-6'>
                 <I18nComponent i18nKey="foundOpportunities" values={{ count: filteredStocks.length }} />

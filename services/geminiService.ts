@@ -19,7 +19,7 @@ const getPriceRangeConstraint = (priceRange: PriceRange, language: 'ar' | 'en') 
         '50-100': { ar: "نقطة الدخول تتراوح بين 50 و 100 دولار.", en: "entry points are strictly between $50 and $100." },
         '100-200': { ar: "نقطة الدخول تتراوح بين 100 و 200 دولار.", en: "entry points are strictly between $100 and $200." },
         '200+': { ar: "نقطة الدخول تزيد عن 200 دولار.", en: "entry points are strictly above $200." },
-        'all': { ar: "", en: "" } // Should not be reached if handled above
+        'all': { ar: "", en: "" }
     };
 
     return priceMap[priceRange];
@@ -31,7 +31,6 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
   
   try {
     const API_KEY = process.env.API_KEY;
-    // Removed explicit API_KEY_NOT_SET check, relying on GoogleGenAI to handle if missing
     const ai = new GoogleGenAI({ apiKey: API_KEY });
 
     const today = new Date().toISOString().split('T')[0];
@@ -40,77 +39,49 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
     const langInstructions = {
         ar: {
             langName: "Arabic (العربية الفصحى)",
-            // Fix: Reconstructed prompt using array join to resolve string parsing issues
             prompt: [
-                `الرجاء تزويدي بقائمة من 100 سهم أمريكي تمثل فرص شراء قوية عند قاع السوينج لليوم بتاريخ ${today}.`,
-                `يجب أن يقدم كل سهم خطة تداول متكاملة (نقاط دخول، هدف، وقف خسارة) مع التركيز على نقاط الدخول المثالية التي تمثل "نقاط الطعم".`,
-                `ركز فقط على تحديد فرص قاع السوينج الواضحة.`,
-                priceConstraint.ar ? `بشرط أن تكون ${priceConstraint.ar}` : '',
-                `إذا لم يكن السهم في قاع سوينج واضح، فلا تضمنه في القائمة.`,
+                `أنت خبير أسواق مالية ومحلل فني.`,
+                `المطلوب: تحليل السوق وتحديد أفضل 10 فرص (حد أقصى) لأسهم أمريكية للشراء اليوم (${today}) بناءً على التحليل الفني.`,
+                `معايير البحث: ابحث عن الأسهم التي تشكل "قاع سوينج" (Swing Low)، أو ترتد من مناطق دعم قوية، أو تظهر نماذج استمرارية إيجابية.`,
+                `مهم: إذا لم تتوفر فرص "قاع سوينج" مثالية، يرجى اختيار الأسهم التي تظهر أفضل إعدادات فنية قريبة من الدعم (Best Available Setups). لا ترجع قائمة فارغة.`,
+                `يجب أن يقدم كل سهم خطة تداول متكاملة (نطاق دخول، هدف، وقف خسارة).`,
+                priceConstraint.ar ? `شرط إضافي: ${priceConstraint.ar}` : '',
+                `فلترة: تجنب الأسهم غير المتوافقة شرعياً (مثل البنوك والخمور) قدر الإمكان.`,
+                `تنسيق: المخرجات يجب أن تكون مصفوفة JSON فقط.`
             ].filter(Boolean).join(' ')
         },
         en: {
             langName: "English",
-            // Fix: Reconstructed prompt using array join to resolve string parsing issues
             prompt: [
-                `Please provide me with a list of 100 US stocks that represent strong buying opportunities at a Swing Channel Low for today, ${today}.`,
-                `Each stock must include a complete trading plan (entry points, target, stop loss), specifically emphasizing the *optimal* entry points at these swing lows.`,
-                `Focus strictly on identifying clear Swing Channel Low opportunities.`,
-                priceConstraint.en ? `Ensure that the ${priceConstraint.en}` : '',
-                `If a stock is not at a clear swing low, do not include it in the list.`,
+                `You are a financial market expert and technical analyst.`,
+                `Task: Analyze the market and identify the top 10 (maximum) US stock buying opportunities for today (${today}) based on technical analysis.`,
+                `Criteria: Look for stocks at "Swing Lows", bouncing from strong support, or showing positive continuation patterns.`,
+                `Important: If perfect "Swing Low" setups are scarce, strictly select the "Best Available Setups" approaching support. Do NOT return an empty list.`,
+                `Each stock must include a complete trading plan (entry range, target, stop loss).`,
+                priceConstraint.en ? `Additional Constraint: ${priceConstraint.en}` : '',
+                `Filter: Avoid ethically non-compliant stocks (e.g., banks, alcohol) where possible.`,
+                `Format: Output must be a JSON array only.`
             ].filter(Boolean).join(' ')
         }
     }
 
-    // Fix: Reconstructed systemInstruction using array join to resolve string parsing issues
     const systemInstruction = [
-        `You are an expert technical analyst in the US stock market, specializing in swing and trend strategies.`,
-        `Your analysis is based on interpreting technical charts, similar to how one would analyze TradingView charts.`,
-        `Your task is to identify 100 US stocks with strong entry opportunities for today, ${today}, based on advanced technical analysis.`,
-        ``,
-        `CURRENT_DATE_FOR_ANALYSIS: ${today}`,
-        ``,
-        `**MANDATORY CRITERIA FOR IDENTIFYING 'SWING CHANNEL LOW' OPPORTUNITIES:**`,
-        `1.  **Established Upward Channel:** The stock MUST be in a clearly defined upward-trending channel.`,
-        `2.  **Contact with Support:** The stock's price action MUST be touching or have just touched the lower support trendline.`,
-        `3.  **Confirmation of Bounce:** There MUST be technical evidence of a potential bounce or reversal from the support line.`,
-        `4.  **Focus:** Only include stocks that meet ALL of these criteria for a clear 'Swing Channel Low' opportunity.`,
-        ``,
-        `**MANDATORY SHARIA COMPLIANCE AND ETHICAL FILTERING:**`,
-        `-   **Exclude Banks:** Do NOT include any banking institutions or financial services companies that primarily deal with interest.`,
-        `-   **Exclude Alcohol/Gambling:** Do NOT include companies whose primary business involves alcohol production/distribution or gambling.`,
-        `-   **Exclude Interest-Based Lending (Riba):** Do NOT include companies that engage in significant interest-based lending to individuals or corporations.`,
-        `-   **Exclude Media Companies:** Do NOT include companies primarily engaged in media, entertainment, or publishing.`,
-        `-   **Exclude War Industries:** Do NOT include companies involved in defense, weapons manufacturing, or military contracting.`,
-        `-   **Exclude Israeli Companies:** Do NOT include any companies based in or significantly operating from Israel.`,
-        ``,
-        `**OUTPUT DIRECTIVES (CRITICAL - NO NUMERICAL DATA FROM GEMINI):**`,
-        `- **NO EXTERNAL DATA:** You are **STRICTLY FORBIDDEN** from providing any numerical stock data such as 'price', 'volume', 'marketCap', 'sector', 'debtToAssetsRatio', 'interestIncomeRatio', 'priceDataDate'.`,
-        `- **PURELY ANALYTICAL OUTPUT:** Your output is purely analytical and textual. Your internal model knowledge and analysis are the sole source for identifying opportunities and crafting the trading plan.`,
-        `- **TRADING PLAN (MANDATORY IF OPPORTUNITY):** If a clear 'Swing Channel Low' opportunity is identified, you MUST provide a complete trading plan:`,
-        `    - **entryPoints:** A list of suggested entry prices relevant to the identified swing low.`,
-        `    - **targetPrice:** The suggested target price.`,
-        `    - **stopLoss:** The suggested stop-loss price.`,
-        `- **NO OPPORTUNITY HANDLING:** If a stock does NOT present a clear 'Swing Channel Low' opportunity based on your strict criteria, it MUST NOT be included in the list.`,
-        ``,
-        `**CRITICAL OUTPUT FORMATTING:**`,
-        `Your ENTIRE response MUST be a single, valid JSON array string. Do NOT include any introductory text, markdown formatting (like \`\`\`json), or explanations outside of the JSON array itself. The JSON must be an array of objects, where each object has the following keys: "companyName", "ticker", "exchange", "reason", "analysis", "entryPoints", "targetPrice", "stopLoss". All other fields are explicitly excluded.`,
-        ``,
-        `All your responses, analysis, and company data must be in the requested language: **${langInstructions[language].langName}**. The data analysis must be current for today, ${today}.`,
+        `You are an expert technical analyst specializing in US stocks.`,
+        `Your goal is to generate a list of actionable trading opportunities for ${today}.`,
+        `Use your knowledge of chart patterns, market structure, and price action.`,
+        `Do NOT refuse to answer due to lack of real-time data. Use the most recent market data you have to identify valid technical setups (e.g., support retests, channel bottoms).`,
+        `Output strictly a JSON array. No markdown formatting.`,
     ].join('\n');
 
-    // Use parts array for contents to ensure correct type handling
     const contents = { parts: [{ text: langInstructions[language].prompt }] };
     
-    // Fix: Moved `signal` from `config` to the top-level parameters of `generateContent`
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
+      model: "gemini-3-pro-preview",
       contents: contents,
-      signal: signal, // Pass the AbortSignal here
+      signal: signal,
       config: {
         systemInstruction: systemInstruction,
-        temperature: 0.2,
-        // Add responseMimeType and responseSchema for structured JSON output
+        temperature: 0.4, // Slightly increased to ensure results are found even in choppy markets
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
@@ -119,41 +90,37 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
             properties: {
               companyName: { type: Type.STRING, description: 'The name of the company.' },
               ticker: { type: Type.STRING, description: 'The stock ticker symbol.' },
-              exchange: { type: Type.STRING, description: 'The exchange where the stock is primarily traded (e.g., NASDAQ, NYSE).' }, // Added exchange
-              reason: { type: Type.STRING, description: 'The technical reason for the opportunity.' },
-              analysis: { type: Type.STRING, description: 'Detailed technical analysis.' },
+              exchange: { type: Type.STRING, description: 'The exchange (e.g., NASDAQ, NYSE).' },
+              reason: { type: Type.STRING, description: 'Brief technical reason (e.g., "Bounce off 200 MA").' },
+              analysis: { type: Type.STRING, description: 'Detailed analysis of the setup.' },
               entryPoints: {
                 type: Type.ARRAY,
                 items: { type: Type.NUMBER },
                 description: 'Suggested entry prices.'
               },
-              stopLoss: { type: Type.NUMBER, description: 'Suggested stop-loss price.' },
-              targetPrice: { type: Type.NUMBER, description: 'Suggested target price.' }
+              stopLoss: { type: Type.NUMBER, description: 'Stop loss price.' },
+              targetPrice: { type: Type.NUMBER, description: 'Target price.' }
             },
-            required: ["companyName", "ticker", "exchange", "reason", "analysis", "entryPoints", "stopLoss", "targetPrice"],
-          },
-        },
-      },
+            required: ["companyName", "ticker", "reason", "analysis", "entryPoints", "stopLoss", "targetPrice"]
+          }
+        }
+      }
     });
 
-    // With responseMimeType and responseSchema, response.text should be a clean JSON string
-    rawText = response.text; // Assign to rawText declared outside try block
+    rawText = response.text;
     try {
         data = JSON.parse(rawText.trim()) as StockOpportunity[];
     } catch (parseError) {
         console.error("Failed to parse JSON from Gemini API in fetchStockOpportunities.", { rawText, parseError });
-        // Fix: Corrected string concatenation to resolve "Cannot find name 'Failed'", etc.
         if (parseError instanceof SyntaxError) {
-            throw new Error(`Failed to parse response from Gemini: Invalid JSON syntax. Details: ${parseError.message}. Raw JSON: ${rawText.trim()}`);
+            throw new Error(`Failed to parse response: Invalid JSON syntax. Raw: ${rawText.substring(0, 100)}...`);
         }
-        throw new Error(`Failed to parse response from Gemini: An unknown parsing error occurred.`);
+        throw new Error(`Failed to parse response from Gemini.`);
     }
     
-    // Fill in omitted numerical fields with null/defaults as Gemini no longer provides them
-    // And ensure numerical fields are parsed as numbers
     const augmentedData = data.map(stock => ({
         ...stock,
-        exchange: stock.exchange || null, // Ensure exchange is set
+        exchange: stock.exchange || null,
         price: null,
         sector: null,
         volume: null,
@@ -162,23 +129,21 @@ export const fetchStockOpportunities = async (language: 'ar' | 'en', priceRange:
         interestIncomeRatio: null,
         financialsDate: null,
         priceDataDate: null,
-        // Explicitly parse trading plan numbers to ensure correct type
         entryPoints: Array.isArray(stock.entryPoints) ? stock.entryPoints.map(point => parseFloat(String(point))) : [],
         stopLoss: parseFloat(String(stock.stopLoss)),
         targetPrice: parseFloat(String(stock.targetPrice)),
     }));
     return augmentedData;
 
-  } catch (error: any) { // Type 'any' for error to handle AbortError.name
+  } catch (error: any) {
     console.error("Error fetching stock opportunities:", error);
     if (error.name === 'AbortError') {
-        throw error; // Re-throw AbortError to be caught by the component
+        throw error;
     }
-    // Removed specific error handling for API key prompt
     if (error instanceof Error) {
-        throw new Error(`Failed to fetch data from Gemini API: ${error.message}`);
+        throw new Error(`Failed to fetch data: ${error.message}`);
     }
-    throw new Error("An unknown error occurred while contacting the Gemini API.");
+    throw new Error("An unknown error occurred while contacting the API.");
   }
 };
 
@@ -189,126 +154,84 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
 
     try {
       const API_KEY = process.env.API_KEY;
-      // Removed explicit API_KEY_NOT_SET check, relying on GoogleGenAI to handle if missing
       const ai = new GoogleGenAI({ apiKey: API_KEY });
 
         const today = new Date().toISOString().split('T')[0];
         const langInstructions = {
             ar: {
                 langName: "Arabic (العربية الفصحى)",
-                // Fix: Reconstructed prompt using array join to resolve string parsing issues
                 prompt: [
                     `الرجاء تحليل السهم الأمريكي برمز '${ticker}' لليوم بتاريخ ${today}.`,
-                    `هل يمثل فرصة "قاع سوينج" حسب المعايير الفنية الإلزامية؟`,
-                    `إذا كانت هناك فرصة دخول حالية، قدم خطة تداول كاملة مع التركيز على نقاط الدخول المثالية التي تمثل "نقاط الطعم".`,
-                    `إذا لم تكن هناك فرصة، وضح ذلك في التحليل وأعد قيم الخطdة (نقاط الدخول، الهدف، الوقف) كأصفار.`,
+                    `هل يمثل فرصة "قاع سوينج" أو فرصة شراء فنية جيدة؟`,
+                    `إذا كانت هناك فرصة دخول حالية، قدم خطة تداول كاملة.`,
+                    `إذا لم تكن هناك فرصة، وضح ذلك في التحليل وأعد قيم الخطة (نقاط الدخول، الهدف، الوقف) كأصفار.`
                 ].join(' ')
             },
             en: {
                 langName: "English",
-                // Fix: Reconstructed prompt using array join to resolve string parsing issues
                 prompt: [
                     `Please analyze the US stock with ticker '${ticker}' for today, ${today}.`,
-                    `Does it represent a 'Swing Channel Low' opportunity based on the mandatory technical criteria?`,
-                    `If a current entry opportunity exists, provide a full trading plan, specifically emphasizing the *optimal* entry points.`,
-                    `If no opportunity exists, state that clearly in the analysis and return the trading plan values (entry points, target, stop loss) as zeros.`,
+                    `Does it represent a 'Swing Channel Low' or a good technical buying opportunity?`,
+                    `If a current entry opportunity exists, provide a full trading plan.`,
+                    `If no opportunity exists, state that clearly and return the trading plan values (entry points, target, stop loss) as zeros.`
                 ].join(' ')
             }
         };
 
-        // Fix: Reconstructed systemInstruction using array join to resolve string parsing issues
         const systemInstruction = [
             `You are an expert technical analyst for the US stock market.`,
-            `Your analysis is based on interpreting technical charts, similar to how one would analyze TradingView charts.`,
-            `Your task is to analyze a single stock provided by the user for today, ${today}.`,
-            ``,
-            `CURRENT_DATE_FOR_ANALYSIS: ${today}`,
-            ``,
-            `**MANDATORY CRITERIA FOR IDENTIFYING 'SWING CHANNEL LOW' OPPORTUNITIES:**`,
-            `1.  **Established Upward Channel:** The stock MUST be in a clearly defined upward-trending channel.`,
-            `2.  **Contact with Support:** The stock's price action MUST be touching or have just touched the lower support trendline.`,
-            `3.  **Confirmation of Bounce:** There MUST be technical evidence of a potential bounce or reversal from the support line.`,
-            ``,
-            `**MANDATORY SHARIA COMPLIANCE AND ETHICAL FILTERING:**`,
-            `-   **Exclude Banks:** Do NOT include any banking institutions or financial services companies that primarily deal with interest.`,
-            `-   **Exclude Alcohol/Gambling:** Do NOT include companies whose primary business involves alcohol production/distribution or gambling.`,
-            `-   **Exclude Interest-Based Lending (Riba):** Do NOT include companies that engage in significant interest-based lending to individuals or corporations.`,
-            `-   **Exclude Media Companies:** Do NOT include companies primarily engaged in media, entertainment, or publishing.`,
-            `-   **Exclude War Industries:** Do NOT include companies involved in defense, weapons manufacturing, or military contracting.`,
-            `-   **Exclude Israeli Companies:** Do NOT include any companies based in or significantly operating from Israel.`,
-            ``,
-            `**OUTPUT DIRECTIVES (CRITICAL - NO NUMERICAL DATA FROM GEMINI):**`,
-            `- **NO EXTERNAL DATA:** You are **STRICTLY FORBIDDEN** from providing any numerical stock data such as 'price', 'volume', 'marketCap', 'sector', 'debtToAssetsRatio', 'interestIncomeRatio', 'financialsDate', or 'priceDataDate'.`,
-            `- **PURELY ANALYTICAL OUTPUT:** Your output is purely analytical and textual. Your internal model knowledge and analysis are the sole source for identifying opportunities and crafting the trading plan.`,
-            ``,
-            `**CRITICAL OUTPUT FORMATTING:**`,
-            `Your ENTIRE response MUST be a single, valid JSON object string. Do NOT include any introductory text, markdown formatting (like \`\`\`json), or explanations outside of the JSON object itself. The JSON object must have the following keys: "companyName", "ticker", "exchange", "reason", "analysis", "entryPoints", "stopLoss", "targetPrice". All other fields are explicitly excluded.`,
-            ``,
-            `**RESPONSE LOGIC:**`,
-            `- **If the stock MEETS ALL technical criteria for a 'Swing Channel Low' opportunity**:`,
-            `    - **reason**: State clearly that it's a "Swing Low Opportunity".`,
-            `    - **analysis**: Justify HOW it meets the criteria.`,
-            `    - **trading plan**: Provide a full, actionable trading plan.`,
-            `- **If the stock DOES NOT meet the criteria**:`,
-            `    - **reason**: State clearly "No current entry opportunity found."`,
-            `    - **analysis**: Briefly explain why it does not meet criteria or its current technical status.`,
-            `    - **trading plan**: CRITICAL - You MUST return 'entryPoints' as [0], 'targetPrice' as 0, and 'stopLoss' as 0.`,
-            ``,
-            `All responses must be in the requested language: **${langInstructions[language].langName}**.`,
+            `Task: Analyze the stock '${ticker}' for ${today}.`,
+            `Output: A JSON object containing the analysis and trading plan.`,
+            `If the stock is a good buy (Swing Low, Support, Breakout), provide entryPoints, stopLoss, and targetPrice.`,
+            `If NOT a buy, set entryPoints to [0], stopLoss to 0, and targetPrice to 0.`,
+            `Format: JSON object only. No markdown.`,
         ].join('\n');
 
-        // Use parts array for contents to ensure correct type handling
         const contents = { parts: [{ text: langInstructions[language].prompt }] };
 
-        // Fix: Moved `signal` from `config` to the top-level parameters of `generateContent`
         const response = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-3-pro-preview",
             contents: contents,
-            signal: signal, // Pass the AbortSignal here
+            signal: signal,
             config: {
                 systemInstruction: systemInstruction,
                 temperature: 0.2,
-                // Add responseMimeType and responseSchema for structured JSON output
                 responseMimeType: "application/json",
                 responseSchema: {
                   type: Type.OBJECT,
                   properties: {
-                    companyName: { type: Type.STRING, description: 'The name of the company.' },
-                    ticker: { type: Type.STRING, description: 'The stock ticker symbol.' },
-                    exchange: { type: Type.STRING, description: 'The exchange where the stock is primarily traded (e.g., NASDAQ, NYSE).' }, // Added exchange
-                    reason: { type: Type.STRING, description: 'The technical reason for the opportunity or lack thereof.' },
-                    analysis: { type: Type.STRING, description: 'Detailed technical analysis.' },
+                    companyName: { type: Type.STRING },
+                    ticker: { type: Type.STRING },
+                    exchange: { type: Type.STRING },
+                    reason: { type: Type.STRING },
+                    analysis: { type: Type.STRING },
                     entryPoints: {
                       type: Type.ARRAY,
                       items: { type: Type.NUMBER },
                       description: 'Suggested entry prices, or [0] if no opportunity.'
                     },
-                    stopLoss: { type: Type.NUMBER, description: 'Suggested stop-loss price, or 0 if no opportunity.' },
-                    targetPrice: { type: Type.NUMBER, description: 'Suggested target price, or 0 if no opportunity.' }
+                    stopLoss: { type: Type.NUMBER, description: 'Suggested stop-loss price, or 0.' },
+                    targetPrice: { type: Type.NUMBER, description: 'Suggested target price, or 0.' }
                   },
-                  required: ["companyName", "ticker", "exchange", "reason", "analysis", "entryPoints", "stopLoss", "targetPrice"],
-                },
-            },
+                  required: ["companyName", "ticker", "reason", "analysis", "entryPoints", "stopLoss", "targetPrice"]
+                }
+            }
         });
 
-        // With responseMimeType and responseSchema, response.text should be a clean JSON string
-        rawText = response.text; // Assign to rawText declared outside try block
+        rawText = response.text;
         try {
             data = JSON.parse(rawText.trim()) as StockOpportunity;
         } catch (parseError) {
             console.error("Failed to parse JSON from Gemini API in fetchSingleStockAnalysis.", { rawText, parseError });
-            // Fix: Corrected string concatenation to resolve "Cannot find name 'Failed'", etc.
             if (parseError instanceof SyntaxError) {
-                throw new Error(`Failed to parse response from Gemini: Invalid JSON syntax. Details: ${parseError.message}. Raw JSON: ${rawText.trim()}`);
+                throw new Error(`Failed to parse response: Invalid JSON syntax.`);
             }
-            throw new Error(`Failed to parse response from Gemini: An unknown parsing error occurred.`);
+            throw new Error(`Failed to parse response.`);
         }
         
-        // Fill in omitted numerical fields with null/defaults as Gemini no longer provides them
-        // And ensure numerical fields are parsed as numbers
         const augmentedData: StockOpportunity = {
             ...data,
-            exchange: data.exchange || null, // Ensure exchange is set
+            exchange: data.exchange || null,
             price: null,
             sector: null,
             volume: null,
@@ -317,7 +240,6 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
             interestIncomeRatio: null,
             financialsDate: null,
             priceDataDate: null,
-            // Explicitly parse trading plan numbers to ensure correct type
             entryPoints: Array.isArray(data.entryPoints) ? data.entryPoints.map(point => parseFloat(String(point))) : [],
             stopLoss: parseFloat(String(data.stopLoss)),
             targetPrice: parseFloat(String(data.targetPrice)),
@@ -325,17 +247,14 @@ export const fetchSingleStockAnalysis = async (ticker: string, language: 'ar' | 
 
         return augmentedData;
 
-    } catch (error: any) { // Type 'any' for error to handle AbortError.name
+    } catch (error: any) {
         console.error(`Error fetching analysis for ${ticker}:`, error);
         if (error.name === 'AbortError') {
-            throw error; // Re-throw AbortError to be caught by the component
+            throw error;
         }
-        // Removed specific error handling for API key prompt
         if (error instanceof Error) {
-            // Fix: Corrected string concatenation to resolve "Cannot find name 'ticker'"
-            throw new Error(`Failed to fetch data from Gemini API for ${ticker}: ${error.message}`);
+            throw new Error(`Failed to analyze ${ticker}: ${error.message}`);
         }
-        // Fix: Corrected string concatenation to resolve "Cannot find name 'ticker'"
         throw new Error(`An unknown error occurred while analyzing ${ticker}.`);
     }
 };
